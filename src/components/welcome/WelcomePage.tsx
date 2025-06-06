@@ -38,14 +38,16 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onGetStarted }) => {
               and provide personalized, empathetic responses to support your mental wellness journey.
             </p>
             
-            <Button
-              onClick={onGetStarted}
-              size="lg"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
-              icon={<ArrowRight size={20} />}
-            >
-              Start Your Journey
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                onClick={onGetStarted}
+                size="lg"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
+                icon={<ArrowRight size={20} />}
+              >
+                Start Your Journey
+              </Button>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -139,14 +141,16 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onGetStarted }) => {
             Your mental wellness matters, and we're here to support you every step of the way.
           </p>
           
-          <Button
-            onClick={onGetStarted}
-            size="lg"
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
-            icon={<Heart size={20} />}
-          >
-            Create Your Account
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              onClick={onGetStarted}
+              size="lg"
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-4 text-lg"
+              icon={<Heart size={20} />}
+            >
+              Create Your Account
+            </Button>
+          </div>
           
           <p className="text-sm text-gray-500 mt-4">
             Free to start • No credit card required • Privacy guaranteed
