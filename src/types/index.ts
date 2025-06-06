@@ -2,6 +2,7 @@ export type Mood = 'happy' | 'neutral' | 'sad';
 
 export interface JournalEntry {
   id: string;
+  userId: string; // Added userId to associate entries with users
   content: string;
   date: Date;
   mood: Mood;
@@ -18,6 +19,8 @@ export interface User {
   occupation: string;
   location?: string;
   interests?: string[];
+  recoveryEmail?: string; // Added recovery email
+  recoveryPhone?: string; // Added recovery phone
   createdAt: Date;
   preferences: {
     aiTone: 'calm' | 'cheerful' | 'thoughtful';

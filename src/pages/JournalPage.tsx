@@ -20,15 +20,17 @@ const JournalPage: React.FC<JournalPageProps> = ({ user }) => {
   const [showAllEntries, setShowAllEntries] = useState(false);
   
   useEffect(() => {
-    // Load journal entries
-    const storedEntries = getJournalEntries();
-    
-    // Sort by date (newest first)
-    const sortedEntries = [...storedEntries].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    
-    setEntries(sortedEntries);
+    // Load journal entries for the current user only
+    if (user) {
+      const storedEntries = getJournalEntries(user.id);
+      
+      // Sort by date (newest first)
+      const sortedEntries = [...storedEntries].sort((a, b) => {
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      });
+      
+      setEntries(sortedEntries);
+    }
     
     // Set random daily prompt
     const prompts = getDailyPrompts();
@@ -80,7 +82,7 @@ const JournalPage: React.FC<JournalPageProps> = ({ user }) => {
       
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Your Journal</h1>
       
-      <JournalEntryForm prompt={dailyPrompt} onEntrySubmitted={handleNewEntry} />
+      <JournalEntryForm prompt={dailyPrompt} user={user} onEntrySubmitted={handleNewEntry} />
       
       <div className="mt-8">
         <div className="flex justify-between items-center mb-4">

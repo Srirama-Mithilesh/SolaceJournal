@@ -6,14 +6,15 @@ import Card from '../ui/Card';
 import AudioRecorder from './AudioRecorder';
 import { analyzeMood, analyzeAudio } from '../../utils/moodAnalysis';
 import { saveJournalEntry } from '../../utils/storage';
-import { JournalEntry } from '../../types';
+import { JournalEntry, User } from '../../types';
 
 interface JournalEntryFormProps {
   prompt: string;
+  user: User | null;
   onEntrySubmitted: (entry: JournalEntry) => void;
 }
 
-const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, onEntrySubmitted }) => {
+const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEntrySubmitted }) => {
   const [content, setContent] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [activeTab, setActiveTab] = useState<'text' | 'audio' | 'photo'>('text');
@@ -22,7 +23,7 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, onEntrySubm
   const handleSubmitText = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!content.trim()) return;
+    if (!content.trim() || !user) return;
     
     setIsAnalyzing(true);
     setError(null);
@@ -34,6 +35,7 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, onEntrySubm
       // Create new journal entry
       const newEntry: JournalEntry = {
         id: Date.now().toString(),
+        userId: user.id, // Associate entry with user
         content,
         date: new Date(),
         mood: analysis.mood,
@@ -59,6 +61,8 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, onEntrySubm
   };
 
   const handleSubmitAudio = async (audioBlob: Blob) => {
+    if (!user) return;
+    
     setIsAnalyzing(true);
     setError(null);
     
@@ -69,6 +73,7 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, onEntrySubm
       // Create new journal entry
       const newEntry: JournalEntry = {
         id: Date.now().toString(),
+        userId: user.id, // Associate entry with user
         content: analysis.transcription,
         date: new Date(),
         mood: analysis.mood,

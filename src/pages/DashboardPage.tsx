@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MoodCalendar from '../components/dashboard/MoodCalendar';
 import MoodStats from '../components/dashboard/MoodStats';
 import Card from '../components/ui/Card';
-import { getJournalEntries, getMonthlySummaries } from '../utils/storage';
+import Button from '../components/ui/Button';
+import { getJournalEntries, getMonthlySummaries, getUser } from '../utils/storage';
 import { JournalEntry, MonthSummary } from '../types';
 import { generateMonthlySummary } from '../utils/moodAnalysis';
 import { format } from 'date-fns';
@@ -10,46 +12,71 @@ import { format } from 'date-fns';
 const DashboardPage: React.FC = () => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [monthlySummary, setMonthlySummary] = useState<MonthSummary | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Load journal entries
-    const storedEntries = getJournalEntries();
+    // Get current user
+    const user = getUser();
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Load journal entries for current user only
+    const storedEntries = getJournalEntries(user.id);
     setEntries(storedEntries);
     
-    // Get current month and year
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
+    // Get selected month and year
+    const selectedMonth = selectedDate.getMonth();
+    const selectedYear = selectedDate.getFullYear();
     
     // Get stored summaries
     const summaries = getMonthlySummaries();
     const existingSummary = summaries.find(
-      s => s.month === format(now, 'MMMM') && s.year === currentYear
+      s => s.month === format(selectedDate, 'MMMM') && s.year === selectedYear
     );
     
     if (existingSummary) {
       setMonthlySummary(existingSummary);
     } else if (storedEntries.length > 0) {
-      // Generate a new summary
+      // Generate a new summary for the selected month
       const { moodCounts, reflection } = generateMonthlySummary(
         storedEntries,
-        currentMonth,
-        currentYear
+        selectedMonth,
+        selectedYear
       );
       
       const newSummary: MonthSummary = {
-        month: format(now, 'MMMM'),
-        year: currentYear,
+        month: format(selectedDate, 'MMMM'),
+        year: selectedYear,
         moodCounts,
         reflection
       };
       
       setMonthlySummary(newSummary);
+    } else {
+      setMonthlySummary(null);
     }
     
     setIsLoading(false);
-  }, []);
+  }, [selectedDate]);
+
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const newDate = new Date(selectedDate);
+    if (direction === 'prev') {
+      newDate.setMonth(newDate.getMonth() - 1);
+    } else {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+    setSelectedDate(newDate);
+  };
+
+  const isCurrentMonth = () => {
+    const now = new Date();
+    return selectedDate.getMonth() === now.getMonth() && 
+           selectedDate.getFullYear() === now.getFullYear();
+  };
   
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Loading...</div>;
@@ -59,9 +86,40 @@ const DashboardPage: React.FC = () => {
     <div>
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Mood Dashboard</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      {/* Current Month Stats */}
+      <div className="mb-6">
         <MoodStats entries={entries} period="month" />
-        <MoodStats entries={entries} period="all" />
+      </div>
+      
+      {/* Month Navigation */}
+      <div className="mb-6">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<ChevronLeft size={16} />}
+              onClick={() => navigateMonth('prev')}
+            >
+              Previous
+            </Button>
+            
+            <h2 className="text-lg font-semibold text-gray-800">
+              {format(selectedDate, 'MMMM yyyy')}
+              {isCurrentMonth() && <span className="text-sm text-indigo-600 ml-2">(Current)</span>}
+            </h2>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              icon={<ChevronRight size={16} />}
+              onClick={() => navigateMonth('next')}
+              disabled={selectedDate >= new Date()}
+            >
+              Next
+            </Button>
+          </div>
+        </Card>
       </div>
       
       <div className="mb-6">

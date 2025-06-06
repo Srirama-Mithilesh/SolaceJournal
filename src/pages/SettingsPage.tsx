@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, User, Bell, Moon, Trash, Mail, Calendar, Briefcase, MapPin } from 'lucide-react';
+import { Save, User, Bell, Moon, Trash, Mail, Calendar, Briefcase, MapPin, Phone, AlertTriangle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { getUser, saveUser } from '../utils/storage';
@@ -21,6 +21,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
     occupation: '',
     location: '',
     interests: [],
+    recoveryEmail: '',
+    recoveryPhone: '',
     createdAt: new Date(),
     preferences: {
       aiTone: 'calm',
@@ -37,6 +39,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
   }, [currentUser]);
   
   const handleProfileChange = (field: keyof UserType, value: any) => {
+    // Prevent changing date of birth
+    if (field === 'dateOfBirth') {
+      return;
+    }
     setUser(prev => ({ ...prev, [field]: value }));
   };
 
@@ -117,9 +123,13 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
                 type="date"
                 id="dateOfBirth"
                 value={user.dateOfBirth}
-                onChange={(e) => handleProfileChange('dateOfBirth', e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                disabled
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
               />
+            </div>
+            <div className="flex items-center mt-1">
+              <AlertTriangle className="text-red-500 mr-1" size={14} />
+              <p className="text-xs text-red-500">Date of birth cannot be changed after account creation</p>
             </div>
           </div>
 
@@ -152,6 +162,40 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
                 value={user.location || ''}
                 onChange={(e) => handleProfileChange('location', e.target.value)}
                 placeholder="City, Country"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="recoveryEmail" className="block text-sm font-medium text-gray-700 mb-1">
+              Recovery Email
+            </label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="email"
+                id="recoveryEmail"
+                value={user.recoveryEmail || ''}
+                onChange={(e) => handleProfileChange('recoveryEmail', e.target.value)}
+                placeholder="recovery@email.com"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label htmlFor="recoveryPhone" className="block text-sm font-medium text-gray-700 mb-1">
+              Recovery Phone
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="tel"
+                id="recoveryPhone"
+                value={user.recoveryPhone || ''}
+                onChange={(e) => handleProfileChange('recoveryPhone', e.target.value)}
+                placeholder="+1 (555) 123-4567"
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>

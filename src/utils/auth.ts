@@ -16,6 +16,8 @@ export interface SignupData {
   occupation: string;
   location?: string;
   interests?: string[];
+  recoveryEmail?: string;
+  recoveryPhone?: string;
 }
 
 // Get all users (for demo purposes - in production this would be server-side)
@@ -98,6 +100,8 @@ export const signup = async (signupData: SignupData): Promise<{ success: boolean
     occupation: signupData.occupation,
     location: signupData.location,
     interests: signupData.interests || [],
+    recoveryEmail: signupData.recoveryEmail,
+    recoveryPhone: signupData.recoveryPhone,
     createdAt: new Date(),
     preferences: {
       aiTone: 'calm',

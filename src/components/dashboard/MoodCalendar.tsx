@@ -1,7 +1,7 @@
 import React from 'react';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
-import { subDays, addDays } from 'date-fns';
+import { subDays } from 'date-fns';
 import { JournalEntry, Mood } from '../../types';
 import Card from '../ui/Card';
 import MoodIndicator from '../ui/MoodIndicator';
@@ -61,22 +61,59 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
     });
   });
   
-  // Get color based on mood
-  const getColorClass = (value: CalendarData | null) => {
-    if (!value) return 'fill-gray-100';
-    
-    const { mood } = value;
-    
+  // Get mood emoji based on mood
+  const getMoodEmoji = (mood: Mood): string => {
     switch (mood) {
       case 'happy':
-        return 'fill-green-300 hover:fill-green-400';
+        return '😊';
       case 'neutral':
-        return 'fill-blue-300 hover:fill-blue-400';
+        return '😐';
       case 'sad':
-        return 'fill-purple-300 hover:fill-purple-400';
+        return '😢';
       default:
-        return 'fill-gray-100';
+        return '😐';
     }
+  };
+  
+  // Custom cell renderer with emojis
+  const renderCell = (value: CalendarData | null, index: number) => {
+    if (!value) {
+      return (
+        <rect
+          key={index}
+          width="11"
+          height="11"
+          fill="#ebedf0"
+          rx="2"
+          ry="2"
+        />
+      );
+    }
+    
+    const emoji = getMoodEmoji(value.mood);
+    
+    return (
+      <g key={index}>
+        <rect
+          width="11"
+          height="11"
+          fill="transparent"
+          stroke="#d1d5db"
+          strokeWidth="0.5"
+          rx="2"
+          ry="2"
+        />
+        <text
+          x="5.5"
+          y="8"
+          textAnchor="middle"
+          fontSize="8"
+          fill="black"
+        >
+          {emoji}
+        </text>
+      </g>
+    );
   };
   
   return (
@@ -85,16 +122,16 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
       
       <div className="mb-4 flex items-center space-x-6">
         <div className="flex items-center">
-          <MoodIndicator mood="happy" size={16} />
-          <span className="ml-2 text-sm text-gray-600">Happy</span>
+          <span className="mr-2 text-lg">😊</span>
+          <span className="text-sm text-gray-600">Happy</span>
         </div>
         <div className="flex items-center">
-          <MoodIndicator mood="neutral" size={16} />
-          <span className="ml-2 text-sm text-gray-600">Neutral</span>
+          <span className="mr-2 text-lg">😐</span>
+          <span className="text-sm text-gray-600">Neutral</span>
         </div>
         <div className="flex items-center">
-          <MoodIndicator mood="sad" size={16} />
-          <span className="ml-2 text-sm text-gray-600">Sad</span>
+          <span className="mr-2 text-lg">😢</span>
+          <span className="text-sm text-gray-600">Sad</span>
         </div>
       </div>
       
@@ -103,11 +140,13 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
           startDate={startDate}
           endDate={endDate}
           values={calendarData}
-          classForValue={getColorClass}
           titleForValue={(value) => {
             if (!value) return 'No entries';
             const { date, mood, count } = value;
             return `${date.toDateString()}: ${mood} (${count} ${count === 1 ? 'entry' : 'entries'})`;
+          }}
+          transformDayElement={(element, value, index) => {
+            return renderCell(value, index);
           }}
         />
       </div>

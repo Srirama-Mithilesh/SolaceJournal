@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Lock, Calendar, Briefcase, MapPin, Heart } from 'lucide-react';
+import { X, User, Mail, Lock, Calendar, Briefcase, MapPin, Heart, Phone } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { login, signup, LoginCredentials, SignupData } from '../../utils/auth';
@@ -31,8 +31,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     dateOfBirth: '',
     occupation: '',
     location: '',
-    interests: []
+    interests: [],
+    recoveryEmail: '',
+    recoveryPhone: ''
   });
+
+  // Calculate max date (13 years ago)
+  const getMaxDate = () => {
+    const today = new Date();
+    const thirteenYearsAgo = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
+    return thirteenYearsAgo.toISOString().split('T')[0];
+  };
+
+  // Validate age (must be at least 13)
+  const validateAge = (dateOfBirth: string): boolean => {
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      return age - 1 >= 13;
+    }
+    
+    return age >= 13;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,6 +82,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     setIsLoading(true);
     setError(null);
     
+    // Validate age
+    if (!validateAge(signupData.dateOfBirth)) {
+      setError('You must be at least 13 years old to create an account');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       const result = await signup(signupData);
       if (result.success && result.user) {
@@ -83,7 +113,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
       dateOfBirth: '',
       occupation: '',
       location: '',
-      interests: []
+      interests: [],
+      recoveryEmail: '',
+      recoveryPhone: ''
     });
     setError(null);
   };
@@ -101,7 +133,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
-        className="w-full max-w-md"
+        className="w-full max-w-md max-h-[90vh] overflow-y-auto"
       >
         <Card className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -262,10 +294,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                       type="date"
                       value={signupData.dateOfBirth}
                       onChange={(e) => setSignupData({ ...signupData, dateOfBirth: e.target.value })}
+                      max={getMaxDate()}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       required
                     />
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">You must be at least 13 years old</p>
                 </div>
 
                 <div>
@@ -297,6 +331,38 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                       onChange={(e) => setSignupData({ ...signupData, location: e.target.value })}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="City, Country"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recovery Email (Optional)
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="email"
+                      value={signupData.recoveryEmail}
+                      onChange={(e) => setSignupData({ ...signupData, recoveryEmail: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="recovery@email.com"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recovery Phone (Optional)
+                  </label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="tel"
+                      value={signupData.recoveryPhone}
+                      onChange={(e) => setSignupData({ ...signupData, recoveryPhone: e.target.value })}
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="+1 (555) 123-4567"
                     />
                   </div>
                 </div>

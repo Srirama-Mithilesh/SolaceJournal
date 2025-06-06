@@ -6,20 +6,27 @@ const USER_KEY = 'solace_journal_user';
 const PROMPTS_KEY = 'solace_journal_prompts';
 const SUMMARIES_KEY = 'solace_journal_summaries';
 
-// Journal entries
-export const getJournalEntries = (): JournalEntry[] => {
+// Journal entries - now filtered by user
+export const getJournalEntries = (userId?: string): JournalEntry[] => {
   const entries = localStorage.getItem(ENTRIES_KEY);
-  return entries ? JSON.parse(entries) : [];
+  const allEntries: JournalEntry[] = entries ? JSON.parse(entries) : [];
+  
+  // If userId is provided, filter entries for that user
+  if (userId) {
+    return allEntries.filter(entry => entry.userId === userId);
+  }
+  
+  return allEntries;
 };
 
 export const saveJournalEntry = (entry: JournalEntry): void => {
-  const entries = getJournalEntries();
+  const entries = getJournalEntries(); // Get all entries
   entries.push(entry);
   localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
 };
 
 export const deleteJournalEntry = (id: string): void => {
-  const entries = getJournalEntries();
+  const entries = getJournalEntries(); // Get all entries
   const updatedEntries = entries.filter(entry => entry.id !== id);
   localStorage.setItem(ENTRIES_KEY, JSON.stringify(updatedEntries));
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import JournalEntryCard from '../components/journal/JournalEntryCard';
 import { JournalEntry, Mood } from '../types';
-import { getJournalEntries } from '../utils/storage';
+import { getJournalEntries, getUser } from '../utils/storage';
 import MoodIndicator from '../components/ui/MoodIndicator';
 
 const HistoryPage: React.FC = () => {
@@ -13,8 +13,15 @@ const HistoryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Load journal entries
-    const storedEntries = getJournalEntries();
+    // Get current user
+    const user = getUser();
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Load journal entries for current user only
+    const storedEntries = getJournalEntries(user.id);
     
     // Sort by date (newest first)
     const sortedEntries = [...storedEntries].sort((a, b) => {

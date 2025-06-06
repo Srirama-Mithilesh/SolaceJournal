@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import AuthModal from './components/auth/AuthModal';
+import WelcomePage from './components/welcome/WelcomePage';
 import JournalPage from './pages/JournalPage';
 import DashboardPage from './pages/DashboardPage';
 import HistoryPage from './pages/HistoryPage';
@@ -16,6 +17,7 @@ function App() {
     isLoading: true
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -26,9 +28,9 @@ function App() {
       isLoading: false
     });
 
-    // Show auth modal for new users
+    // Show welcome page for new users
     if (!isAuthenticated) {
-      setShowAuthModal(true);
+      setShowWelcome(true);
     }
   }, []);
 
@@ -39,6 +41,7 @@ function App() {
       isLoading: false
     });
     setShowAuthModal(false);
+    setShowWelcome(false);
   };
 
   const handleLogout = () => {
@@ -47,7 +50,7 @@ function App() {
       user: null,
       isLoading: false
     });
-    setShowAuthModal(true);
+    setShowWelcome(true);
   };
 
   const handleUserUpdate = (updatedUser: User) => {
@@ -55,6 +58,11 @@ function App() {
       ...prev,
       user: updatedUser
     }));
+  };
+
+  const handleGetStarted = () => {
+    setShowWelcome(false);
+    setShowAuthModal(true);
   };
 
   if (authState.isLoading) {
@@ -65,6 +73,20 @@ function App() {
           <p className="text-gray-600">Loading Solace Journal...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show welcome page if not authenticated
+  if (showWelcome && !authState.isAuthenticated) {
+    return (
+      <>
+        <WelcomePage onGetStarted={handleGetStarted} />
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      </>
     );
   }
 
@@ -96,6 +118,9 @@ function App() {
         isOpen={showAuthModal}
         onClose={() => {
           if (authState.isAuthenticated) {
+            setShowAuthModal(false);
+          } else {
+            setShowWelcome(true);
             setShowAuthModal(false);
           }
         }}
