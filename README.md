@@ -86,7 +86,9 @@ Solace Journal is a privacy-first AI journaling application designed to support 
    ```bash
    npm run dev:full
    ```
-   Access at: `http://localhost:5173`
+   Access at:<br>
+     - Frontend: `http://localhost:5173`
+     - Backend: `http://localhost:5000`
 
 ---
 
