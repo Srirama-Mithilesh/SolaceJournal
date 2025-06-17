@@ -1,112 +1,211 @@
-# Solace Journal
 
-A privacy-first AI journaling app that helps users express their thoughts through text and audio, with intelligent mood detection and empathetic responses.
+# Solace Journal  
+**Your Personal AI-Powered Journaling Companion**
 
-## Features
+Solace Journal is a privacy-first AI journaling application designed to support your emotional wellness journey. It enables users to reflect and express themselves through both text and audio entries, with real-time mood detection, voice-to-text transcription, and intuitive mood analytics. With cross-platform compatibility, a minimalist interface, and complete local data storage, Solace Journal ensures a secure and seamless journaling experience.
 
-- **Multi-Modal Journaling**: Express yourself through text or audio entries
-- **AI Mood Analysis**: Real-time emotional analysis using Google's Gemini AI
-- **Audio Transcription**: Automatic speech-to-text conversion
-- **Mood Tracking**: Visual calendar and statistics of your emotional journey
-- **Privacy-First**: All data stored locally by default
-- **Responsive Design**: Beautiful UI that works on all devices
+---
 
-## Setup Instructions
+## 🌟 Core Features
 
-### 1. Environment Setup
+- **📝 Multi-Modal Journaling**  
+  Write using a rich text editor or speak using the audio recorder—switch effortlessly between modes.
 
-1. Copy the environment template:
+- **💡 Intelligent Mood Analysis**  
+  AI-powered emotional detection offers real-time insights into your mental state and patterns.
+
+- **🎙️ Voice-to-Text Transcription**  
+  High-accuracy transcription turns your voice entries into searchable text.
+
+- **📊 Mood Tracking & Insights**  
+  Visual calendar and analytics show emotional trends over time for better self-reflection.
+
+- **🔐 Privacy-First by Design**  
+  All entries and user data are stored locally in your browser with zero server retention.
+
+- **📱 Cross-Platform Compatibility**  
+  Works seamlessly across desktop, tablet, and mobile devices.
+
+---
+
+## 🧩 Additional Highlights
+
+- **⚡ Seamless Offline Capability**  
+  Core features remain available offline for uninterrupted journaling.
+
+- **🎛️ Customizable AI Tone**  
+  Choose between calm, motivational, or neutral tones to suit your journaling mood.
+
+- **🏷️ Entry Tagging & Smart Search**  
+  Organize and retrieve entries easily using tags and keyword search.
+
+- **🧘 Minimalist, Distraction-Free UI**  
+  Clean design helps you focus on expressing yourself without clutter.
+
+- **🚀 Lightweight & Fast**  
+  Optimized for performance with low memory usage on any device.
+
+- **🧑‍💻 Developer-Friendly**  
+  Modular architecture and fallback support make it ideal for contributors.
+
+- **🛣️ Transparent Roadmap**  
+  Upcoming features include encrypted cloud sync, multi-language support, and advanced mood insights.
+
+---
+
+## 🛠️ Installation and Setup
+
+### 🖥️ Requirements
+
+- Python 3.8+
+- Node.js 16+
+- Google Gemini AI API key
+
+### ⚙️ Configuration
+
+1. **Get API Key**  
+   - Visit: [Google AI Studio](https://aistudio.google.com/)
+   - Log in and generate your API key
+
+2. **Set Up Environment**  
    ```bash
+   git clone <repository-url>
+   cd solace-journal
    cp .env.example .env
+   # Add your API key
+   GEMINI_API_KEY=your_actual_api_key_here
    ```
 
-2. Get your Gemini API key:
-   - Go to [Google AI Studio](https://aistudio.google.com/)
-   - Create an account and generate an API key
-   - Add your API key to the `.env` file:
-     ```
-     GEMINI_API_KEY=your_actual_api_key_here
-     ```
-
-### 2. Python Backend Setup
-
-1. Install Python dependencies:
+3. **Install Dependencies**  
    ```bash
    pip install -r requirements.txt
-   ```
-
-### 3. Frontend Setup
-
-1. Install Node.js dependencies:
-   ```bash
    npm install
    ```
 
-### 4. Running the Application
+4. **Run Application**  
+   ```bash
+   npm run dev:full
+   ```
+   Access at: `http://localhost:5173`
 
-You can run both the backend and frontend together:
+---
 
+## 🧭 User Guide
+
+### Text Journaling  
+Use the text editor to write your thoughts. The AI provides empathetic responses and mood feedback in real time.
+
+### Audio Journaling  
+Record your voice. The app transcribes it and analyzes the emotion behind your words.
+
+### Reviewing & Insights  
+- Browse previous entries by date, mood, or keywords.  
+- View dashboards with emotion charts and analytics.
+
+### Personalization  
+Adjust tone, interface layout, and AI sensitivity to fit your preferences.
+
+---
+
+## 🔌 Developer & API Reference
+
+### Commands
 ```bash
-npm run dev:full
-```
-
-Or run them separately:
-
-**Backend only:**
-```bash
+# Start backend only
 npm run backend
-```
 
-**Frontend only:**
-```bash
+# Start frontend only
 npm run dev
 ```
 
-The application will be available at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:5000
+### API Endpoints
 
-## Usage
+| Endpoint           | Method | Purpose                              |
+|--------------------|--------|--------------------------------------|
+| `/health`          | GET    | Check service status                 |
+| `/analyze-text`    | POST   | Analyze mood and generate responses |
+| `/transcribe-audio`| POST   | Convert voice to text                |
+| `/analyze-audio`   | POST   | Full audio analysis pipeline         |
 
-1. **Text Journaling**: Click on the "Text" tab and write your thoughts
-2. **Audio Journaling**: Click on the "Audio" tab, record your voice, and let AI transcribe and analyze it
-3. **View Dashboard**: Check your mood trends and statistics
-4. **Browse History**: Review past entries with filtering options
-5. **Customize Settings**: Adjust AI tone preferences and other settings
+---
 
-## API Endpoints
+## 🧪 Testing & Troubleshooting
 
-- `GET /health` - Check service health
-- `POST /analyze-text` - Analyze text for mood and generate response
-- `POST /transcribe-audio` - Transcribe audio to text
-- `POST /analyze-audio` - Full audio analysis (transcription + mood analysis)
+- **AI Unavailable?**  
+  - Check internet and API key  
+  - App uses mock responses when offline
 
-## Privacy & Security
+- **Audio Not Working?**  
+  - Check mic permissions  
+  - Close other apps using mic  
+  - Refresh if newly granted
 
-- All journal entries are stored locally in your browser
-- AI analysis is performed in real-time without storing your data
-- Your personal information never leaves your device
-- Optional cloud backup coming in future updates
+- **Startup Issues?**  
+  - Ensure correct Python/Node.js versions  
+  - Reinstall with `pip install -r requirements.txt`  
+  - Ensure ports 5000 and 5173 are free
 
-## Technology Stack
+---
 
-- **Frontend**: React, TypeScript, Tailwind CSS, Framer Motion
-- **Backend**: Python, Flask, Google Gemini AI
-- **Storage**: Local Storage (browser)
-- **Audio**: Web Audio API, MediaRecorder API
+## 🔐 Privacy and Security
 
-## Development
+- **Local-Only Storage**  
+  No data is sent to external servers.
 
-The app includes both mock and real AI analysis. If the Gemini service is unavailable, it automatically falls back to mock responses to ensure the app remains functional during development.
+- **Zero Retention AI**  
+  Analysis is done in real-time with no logs.
 
-## Contributing
+- **Minimal External Dependencies**  
+  App works offline except for API calls.
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+- **Future Enhancements**  
+  Optional encrypted cloud sync with user-owned keys.
 
-## License
+---
 
-This project is licensed under the MIT License.
+## 🧱 Technical Stack
+
+### Frontend
+
+- React + TypeScript  
+- Tailwind CSS  
+- Framer Motion
+
+### Backend
+
+- Python Flask  
+- Google Gemini AI  
+- Web Audio API
+
+---
+
+## 🤝 Contributing
+
+1. Fork and create a feature branch  
+2. Follow code conventions and ensure responsiveness  
+3. Test on multiple devices  
+4. Submit a clear pull request
+
+### Guidelines
+
+- Follow TypeScript best practices  
+- Ensure accessibility and responsiveness  
+- Prioritize user privacy
+
+---
+
+## 🙋 Support & Community
+
+- **Report Bugs**: GitHub issues  
+- **Request Features**: GitHub discussions  
+- **Enterprise Support**: Contact core devs
+
+---
+
+## 📜 License
+
+MIT License. See `LICENSE` for full terms.
+
+---
+
+Solace Journal stands as a commitment to accessible mental health support and strong data privacy. It is a companion in your emotional journey—not a replacement for professional help.
