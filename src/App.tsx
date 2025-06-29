@@ -7,7 +7,11 @@ import JournalPage from './pages/JournalPage';
 import DashboardPage from './pages/DashboardPage';
 import HistoryPage from './pages/HistoryPage';
 import SettingsPage from './pages/SettingsPage';
-import { getAuthState } from './utils/auth';
+import BirthdaySparkles from './components/birthday/BirthdaySparkles';
+import MonthlyRewindModal from './components/rewind/MonthlyRewindModal';
+import { getCurrentUserProfile } from './utils/supabaseAuth';
+import { useBirthday } from './hooks/useBirthday';
+import { useMonthlyRewind } from './hooks/useMonthlyRewind';
 import { User, AuthState } from './types';
 
 function App() {
@@ -19,20 +23,68 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  useEffect(() => {
-    // Check if user is already authenticated
-    const { isAuthenticated, user } = getAuthState();
-    setAuthState({
-      isAuthenticated,
-      user,
-      isLoading: false
-    });
+  // Birthday and monthly rewind hooks
+  const { showSparkles, hideSparkles, birthdayData } = useBirthday();
+  const { monthlyRewind, showRewindModal, hideRewindModal, checkForMonthlyRewind } = useMonthlyRewind();
 
-    // Show welcome page for new users
-    if (!isAuthenticated) {
+  useEffect(() => {
+    checkAuthState();
+  }, []);
+
+  useEffect(() => {
+    if (authState.isAuthenticated && authState.user) {
+      // Check for monthly rewind when user is authenticated
+      checkForMonthlyRewind();
+    }
+  }, [authState.isAuthenticated, checkForMonthlyRewind]);
+
+  const checkAuthState = async () => {
+    try {
+      const userProfile = await getCurrentUserProfile();
+      
+      if (userProfile) {
+        const user: User = {
+          id: userProfile.id,
+          name: userProfile.profile?.full_name || 'User',
+          email: userProfile.email || '',
+          dateOfBirth: userProfile.profile?.date_of_birth || '',
+          occupation: userProfile.profile?.occupation || '',
+          location: userProfile.profile?.location || '',
+          interests: [],
+          recoveryEmail: userProfile.profile?.recovery_email || '',
+          recoveryPhone: userProfile.profile?.recovery_phone || '',
+          createdAt: new Date(userProfile.created_at || Date.now()),
+          preferences: {
+            aiTone: userProfile.preferences?.ai_tone || 'calm',
+            notifications: userProfile.preferences?.notifications_enabled ?? true,
+            darkMode: userProfile.preferences?.dark_mode ?? false,
+            showAllEntries: userProfile.preferences?.show_all_entries ?? false
+          }
+        };
+
+        setAuthState({
+          isAuthenticated: true,
+          user,
+          isLoading: false
+        });
+      } else {
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false
+        });
+        setShowWelcome(true);
+      }
+    } catch (error) {
+      console.error('Error checking auth state:', error);
+      setAuthState({
+        isAuthenticated: false,
+        user: null,
+        isLoading: false
+      });
       setShowWelcome(true);
     }
-  }, []);
+  };
 
   const handleAuthSuccess = (user: User) => {
     setAuthState({
@@ -44,7 +96,10 @@ function App() {
     setShowWelcome(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { logoutFromSupabase } = await import('./utils/supabaseAuth');
+    await logoutFromSupabase();
+    
     setAuthState({
       isAuthenticated: false,
       user: null,
@@ -91,42 +146,59 @@ function App() {
   }
 
   return (
-    <Router>
-      <Layout
-        user={authState.user}
-        isAuthenticated={authState.isAuthenticated}
-        onAuthClick={() => setShowAuthModal(true)}
-        onLogout={handleLogout}
-      >
-        <Routes>
-          <Route path="/" element={<JournalPage user={authState.user} />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/history" element={<HistoryPage />} />
-          <Route 
-            path="/settings" 
-            element={
-              <SettingsPage 
-                user={authState.user} 
-                onUserUpdate={handleUserUpdate}
-              />
-            } 
-          />
-        </Routes>
-      </Layout>
+    <>
+      <Router>
+        <Layout
+          user={authState.user}
+          isAuthenticated={authState.isAuthenticated}
+          onAuthClick={() => setShowAuthModal(true)}
+          onLogout={handleLogout}
+        >
+          <Routes>
+            <Route path="/" element={<JournalPage user={authState.user} />} />
+            <Route path="/dashboard" element={<DashboardPage user={authState.user} />} />
+            <Route path="/history" element={<HistoryPage user={authState.user} />} />
+            <Route 
+              path="/settings" 
+              element={
+                <SettingsPage 
+                  user={authState.user} 
+                  onUserUpdate={handleUserUpdate}
+                />
+              } 
+            />
+          </Routes>
+        </Layout>
 
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => {
-          if (authState.isAuthenticated) {
-            setShowAuthModal(false);
-          } else {
-            setShowWelcome(true);
-            setShowAuthModal(false);
-          }
-        }}
-        onAuthSuccess={handleAuthSuccess}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => {
+            if (authState.isAuthenticated) {
+              setShowAuthModal(false);
+            } else {
+              setShowWelcome(true);
+              setShowAuthModal(false);
+            }
+          }}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      </Router>
+
+      {/* Birthday Sparkles */}
+      <BirthdaySparkles 
+        isVisible={showSparkles} 
+        onComplete={hideSparkles} 
       />
-    </Router>
+
+      {/* Monthly Rewind Modal */}
+      {monthlyRewind && (
+        <MonthlyRewindModal
+          isOpen={showRewindModal}
+          onClose={hideRewindModal}
+          rewindData={monthlyRewind}
+        />
+      )}
+    </>
   );
 }
 

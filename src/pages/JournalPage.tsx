@@ -7,8 +7,7 @@ import WelcomeGreeting from '../components/layout/WelcomeGreeting';
 import MoodIndicator from '../components/ui/MoodIndicator';
 import Button from '../components/ui/Button';
 import { JournalEntry, User } from '../types';
-import { getJournalEntries, getDailyPrompts, getUser, saveUser } from '../utils/storage';
-import { getRandomDailyPrompt } from '../utils/moodAnalysis';
+import { databaseService } from '../services/databaseService';
 
 interface JournalPageProps {
   user: User | null;
@@ -24,29 +23,48 @@ const JournalPage: React.FC<JournalPageProps> = ({ user }) => {
   const [responseType, setResponseType] = useState<'happy' | 'neutral' | 'sad'>('neutral');
   
   useEffect(() => {
-    // Load journal entries for the current user only
-    if (user) {
-      const storedEntries = getJournalEntries(user.id);
-      
-      // Sort by date (newest first)
-      const sortedEntries = [...storedEntries].sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      });
-      
-      setEntries(sortedEntries);
-    }
-    
-    // Set random daily prompt
-    const prompts = getDailyPrompts();
-    setDailyPrompt(getRandomDailyPrompt(prompts));
-    
-    // Load user preference for showing all entries
-    if (user?.preferences?.showAllEntries) {
-      setShowAllEntries(true);
-    }
-    
-    setIsLoading(false);
+    loadData();
   }, [user]);
+
+  const loadData = async () => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Load journal entries from database
+      const dbEntries = await databaseService.getJournalEntries(user.id, 50);
+      
+      // Convert database entries to app format
+      const formattedEntries: JournalEntry[] = dbEntries.map(entry => ({
+        id: entry.id,
+        userId: entry.user_id,
+        content: entry.content,
+        date: new Date(entry.created_at),
+        mood: entry.mood as 'happy' | 'neutral' | 'sad',
+        aiResponse: entry.ai_response || '',
+        summary: entry.summary || '',
+        highlights: entry.highlights || []
+      }));
+
+      setEntries(formattedEntries);
+
+      // Get daily prompt
+      const prompt = await databaseService.getRandomDailyPrompt();
+      setDailyPrompt(prompt?.prompt_text || 'How are you feeling today?');
+
+      // Load user preferences
+      const preferences = await databaseService.getUserPreferences(user.id);
+      if (preferences?.show_all_entries) {
+        setShowAllEntries(true);
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   const handleNewEntry = (entry: JournalEntry) => {
     setEntries(prevEntries => [entry, ...prevEntries]);
@@ -62,24 +80,28 @@ const JournalPage: React.FC<JournalPageProps> = ({ user }) => {
     }, 8000);
   };
   
-  const handleDeleteEntry = (id: string) => {
-    setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      await databaseService.deleteJournalEntry(id);
+      setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+    }
   };
 
-  const toggleShowAllEntries = () => {
+  const toggleShowAllEntries = async () => {
     const newValue = !showAllEntries;
     setShowAllEntries(newValue);
     
-    // Save preference to user settings
+    // Save preference to database
     if (user) {
-      const updatedUser = {
-        ...user,
-        preferences: {
-          ...user.preferences,
-          showAllEntries: newValue
-        }
-      };
-      saveUser(updatedUser);
+      try {
+        await databaseService.updateUserPreferences(user.id, {
+          show_all_entries: newValue
+        });
+      } catch (error) {
+        console.error('Error updating preferences:', error);
+      }
     }
   };
 

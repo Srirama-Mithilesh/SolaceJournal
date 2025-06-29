@@ -2,65 +2,62 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import MoodCalendar from '../components/dashboard/MoodCalendar';
 import MoodStats from '../components/dashboard/MoodStats';
+import HappinessCalendar from '../components/enhanced/HappinessCalendar';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { getJournalEntries, getMonthlySummaries, getUser } from '../utils/storage';
-import { JournalEntry, MonthSummary } from '../types';
-import { generateMonthlySummary } from '../utils/moodAnalysis';
+import { JournalEntry, User } from '../types';
+import { databaseService } from '../services/databaseService';
+import { getHappinessIndexForCalendar } from '../utils/enhancedMoodAnalysis';
 import { format } from 'date-fns';
 
-const DashboardPage: React.FC = () => {
+interface DashboardPageProps {
+  user: User | null;
+}
+
+const DashboardPage: React.FC<DashboardPageProps> = ({ user }) => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
-  const [monthlySummary, setMonthlySummary] = useState<MonthSummary | null>(null);
+  const [happinessData, setHappinessData] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Get current user
-    const user = getUser();
+    loadDashboardData();
+  }, [user, selectedDate]);
+
+  const loadDashboardData = async () => {
     if (!user) {
       setIsLoading(false);
       return;
     }
 
-    // Load journal entries for current user only
-    const storedEntries = getJournalEntries(user.id);
-    setEntries(storedEntries);
-    
-    // Get selected month and year
-    const selectedMonth = selectedDate.getMonth();
-    const selectedYear = selectedDate.getFullYear();
-    
-    // Get stored summaries
-    const summaries = getMonthlySummaries();
-    const existingSummary = summaries.find(
-      s => s.month === format(selectedDate, 'MMMM') && s.year === selectedYear
-    );
-    
-    if (existingSummary) {
-      setMonthlySummary(existingSummary);
-    } else if (storedEntries.length > 0) {
-      // Generate a new summary for the selected month
-      const { moodCounts, reflection } = generateMonthlySummary(
-        storedEntries,
-        selectedMonth,
-        selectedYear
-      );
+    try {
+      // Load journal entries from database
+      const dbEntries = await databaseService.getJournalEntries(user.id);
       
-      const newSummary: MonthSummary = {
-        month: format(selectedDate, 'MMMM'),
-        year: selectedYear,
-        moodCounts,
-        reflection
-      };
-      
-      setMonthlySummary(newSummary);
-    } else {
-      setMonthlySummary(null);
+      // Convert database entries to app format
+      const formattedEntries: JournalEntry[] = dbEntries.map(entry => ({
+        id: entry.id,
+        userId: entry.user_id,
+        content: entry.content,
+        date: new Date(entry.created_at),
+        mood: entry.mood as 'happy' | 'neutral' | 'sad',
+        aiResponse: entry.ai_response || '',
+        summary: entry.summary || '',
+        highlights: entry.highlights || []
+      }));
+
+      setEntries(formattedEntries);
+
+      // Load happiness index data for calendar
+      const happinessCalendarData = await getHappinessIndexForCalendar(user.id, 90);
+      setHappinessData(happinessCalendarData);
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
-  }, [selectedDate]);
+  };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(selectedDate);
@@ -122,39 +119,16 @@ const DashboardPage: React.FC = () => {
         </Card>
       </div>
       
+      {/* Mood Calendar */}
       <div className="mb-6">
         <MoodCalendar entries={entries} />
       </div>
-      
-      {monthlySummary && (
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            {monthlySummary.month} {monthlySummary.year} Summary
-          </h2>
-          
-          <p className="text-gray-700 mb-4">{monthlySummary.reflection}</p>
-          
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-green-50 p-3 rounded-lg">
-              <span className="block text-green-700 font-bold text-lg">
-                {monthlySummary.moodCounts.happy}
-              </span>
-              <span className="text-green-600 text-sm">Happy Entries</span>
-            </div>
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <span className="block text-blue-700 font-bold text-lg">
-                {monthlySummary.moodCounts.neutral}
-              </span>
-              <span className="text-blue-600 text-sm">Neutral Entries</span>
-            </div>
-            <div className="bg-purple-50 p-3 rounded-lg">
-              <span className="block text-purple-700 font-bold text-lg">
-                {monthlySummary.moodCounts.sad}
-              </span>
-              <span className="text-purple-600 text-sm">Sad Entries</span>
-            </div>
-          </div>
-        </Card>
+
+      {/* Happiness Index Calendar */}
+      {happinessData.length > 0 && (
+        <div className="mb-6">
+          <HappinessCalendar data={happinessData} />
+        </div>
       )}
     </div>
   );
