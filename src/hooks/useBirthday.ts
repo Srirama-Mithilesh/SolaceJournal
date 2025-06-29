@@ -1,25 +1,28 @@
 import { useState, useEffect } from 'react';
 import { databaseService } from '../services/databaseService';
-import { getCurrentUser } from '../lib/supabase';
+import { User } from '../types';
 
-export const useBirthday = () => {
+export const useBirthday = (user: User | null) => {
   const [isBirthday, setIsBirthday] = useState(false);
   const [birthdayData, setBirthdayData] = useState<any>(null);
   const [showSparkles, setShowSparkles] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkBirthday();
-  }, []);
+    if (user) {
+      checkBirthday();
+    } else {
+      setIsLoading(false);
+    }
+  }, [user]);
 
   const checkBirthday = async () => {
-    try {
-      const user = await getCurrentUser();
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
 
+    try {
       const celebration = await databaseService.checkBirthdayToday(user.id);
       
       if (celebration) {

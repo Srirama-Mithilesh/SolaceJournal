@@ -26,7 +26,7 @@ function App() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
 
   // Birthday and monthly rewind hooks
-  const { showSparkles, hideSparkles, birthdayData } = useBirthday();
+  const { showSparkles, hideSparkles, birthdayData } = useBirthday(authState.user);
   const { monthlyRewind, showRewindModal, hideRewindModal, checkForMonthlyRewind } = useMonthlyRewind();
 
   useEffect(() => {
