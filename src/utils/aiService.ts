@@ -18,6 +18,8 @@ export interface AudioTranscriptionResult {
 class AIService {
   private async makeRequest(endpoint: string, data: any): Promise<any> {
     try {
+      console.log(`Making request to: ${API_BASE_URL}${endpoint}`);
+      
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: {
@@ -27,12 +29,18 @@ class AIService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'API request failed');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       return await response.json();
     } catch (error) {
+      console.error('API Request failed:', error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Unable to connect to the AI service. Please ensure the backend server is running on port 5000.');
+      }
+      
       if (error instanceof Error) {
         throw error;
       }
@@ -54,9 +62,16 @@ class AIService {
 
   async checkHealth(): Promise<{ status: string; gemini_available: boolean }> {
     try {
+      console.log(`Checking health at: ${API_BASE_URL}/health`);
       const response = await fetch(`${API_BASE_URL}/health`);
+      
+      if (!response.ok) {
+        throw new Error(`Health check failed: ${response.status}`);
+      }
+      
       return await response.json();
     } catch (error) {
+      console.error('Health check failed:', error);
       return { status: 'error', gemini_available: false };
     }
   }

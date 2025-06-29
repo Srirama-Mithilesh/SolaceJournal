@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pencil, Mic, Image, Loader, BookOpen } from 'lucide-react';
+import { Pencil, Mic, Image, Loader, BookOpen, AlertCircle } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import AudioRecorder from './AudioRecorder';
@@ -49,7 +49,20 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEnt
       setContent('');
     } catch (error) {
       console.error('Error analyzing mood:', error);
-      setError('Failed to analyze your entry. Please try again.');
+      
+      let errorMessage = 'Failed to analyze your entry. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Unable to connect to the AI service')) {
+          errorMessage = 'Cannot connect to the AI service. Please make sure the backend server is running by executing "npm run dev:full" in your terminal.';
+        } else if (error.message.includes('fetch')) {
+          errorMessage = 'Network connection failed. Please check if the backend server is running on port 5000.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
@@ -81,7 +94,20 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEnt
       
     } catch (error) {
       console.error('Error analyzing audio:', error);
-      setError('Failed to analyze your audio entry. Please try again.');
+      
+      let errorMessage = 'Failed to analyze your audio entry. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Unable to connect to the AI service')) {
+          errorMessage = 'Cannot connect to the AI service. Please make sure the backend server is running by executing "npm run dev:full" in your terminal.';
+        } else if (error.message.includes('fetch')) {
+          errorMessage = 'Network connection failed. Please check if the backend server is running on port 5000.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsAnalyzing(false);
     }
@@ -97,9 +123,18 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEnt
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4"
+          className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-4 flex items-start space-x-3"
         >
-          {error}
+          <AlertCircle size={20} className="text-red-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium">Connection Error</p>
+            <p className="text-sm mt-1">{error}</p>
+            {error.includes('backend server') && (
+              <p className="text-xs mt-2 text-red-600">
+                💡 Tip: Run <code className="bg-red-100 px-1 rounded">npm run dev:full</code> to start both frontend and backend servers.
+              </p>
+            )}
+          </div>
         </motion.div>
       )}
       
