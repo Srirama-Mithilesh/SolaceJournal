@@ -22,6 +22,7 @@ function App() {
   });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
 
   // Birthday and monthly rewind hooks
   const { showSparkles, hideSparkles, birthdayData } = useBirthday();
@@ -40,6 +41,17 @@ function App() {
 
   const checkAuthState = async () => {
     try {
+      // Check if Supabase environment variables are available
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        setConnectionError('Database connection not configured. Please set up your Supabase environment variables.');
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false
+        });
+        return;
+      }
+
       const userProfile = await getCurrentUserProfile();
       
       if (userProfile) {
@@ -67,6 +79,7 @@ function App() {
           user,
           isLoading: false
         });
+        setConnectionError(null);
       } else {
         setAuthState({
           isAuthenticated: false,
@@ -77,6 +90,7 @@ function App() {
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
+      setConnectionError('Failed to connect to database. Please check your internet connection.');
       setAuthState({
         isAuthenticated: false,
         user: null,
@@ -94,6 +108,7 @@ function App() {
     });
     setShowAuthModal(false);
     setShowWelcome(false);
+    setConnectionError(null);
   };
 
   const handleLogout = async () => {
@@ -120,12 +135,46 @@ function App() {
     setShowAuthModal(true);
   };
 
+  const handleRetryConnection = () => {
+    setConnectionError(null);
+    setAuthState(prev => ({ ...prev, isLoading: true }));
+    checkAuthState();
+  };
+
   if (authState.isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Solace Journal...</p>
+          <p className="text-gray-600">Connecting to Solace Journal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show connection error if database is not configured
+  if (connectionError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Database Connection Required</h2>
+          <p className="text-gray-600 mb-4">{connectionError}</p>
+          <div className="space-y-3">
+            <button
+              onClick={handleRetryConnection}
+              className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors"
+            >
+              Retry Connection
+            </button>
+            <p className="text-sm text-gray-500">
+              Need help? Check the README for Supabase setup instructions.
+            </p>
+          </div>
         </div>
       </div>
     );
