@@ -16,7 +16,7 @@ export interface AudioTranscriptionResult {
 }
 
 class AIService {
-  private async makeRequest(endpoint: string, data: any): Promise<any> => {
+  private async makeRequest(endpoint: string, data: any): Promise<any> {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
