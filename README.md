@@ -165,10 +165,36 @@ Record your voice. The app transcribes it and analyzes the emotion behind your w
 
 ## 🆘 Troubleshooting
 
-### Database Connection Issues
-- Verify your Supabase URL and API key in `.env`
-- Check that the migration has been run in Supabase SQL Editor
-- Ensure your Supabase project is active
+### Database Connection Issues (Failed to fetch error)
+**Problem**: Getting "Failed to fetch" error when trying to connect to Supabase.
+
+**Solutions**:
+1. **Verify Supabase Credentials**:
+   - Go to your Supabase dashboard: [supabase.com/dashboard](https://supabase.com/dashboard)
+   - Select your project
+   - Go to Settings → API
+   - Copy the exact Project URL and anon/public key
+   - Update your `.env` file with these exact values
+
+2. **Check Project Status**:
+   - Ensure your Supabase project is active and not paused
+   - Verify the project is fully initialized (green status)
+
+3. **Network Connectivity**:
+   - Check if you can access your Supabase URL directly in a browser
+   - Disable VPN or proxy if using one
+   - Check firewall settings that might block outgoing connections
+
+4. **Restart Development Server**:
+   ```bash
+   # Stop the current server (Ctrl+C)
+   npm run dev:full
+   ```
+
+5. **Test Connection**:
+   - Open browser developer tools (F12)
+   - Check Network tab for failed requests
+   - Look for specific error messages in Console tab
 
 ### AI Not Working
 - Check your Gemini API key in `.env`
@@ -179,6 +205,12 @@ Record your voice. The app transcribes it and analyzes the emotion behind your w
 - Check microphone permissions in browser
 - Ensure no other apps are using the microphone
 - Refresh the page if permissions were recently granted
+
+### Common Environment Variable Issues
+- Make sure `.env` file is in the root directory
+- Restart the development server after changing `.env`
+- Check that variable names start with `VITE_` for frontend access
+- Ensure no extra spaces around the `=` sign in `.env`
 
 ---
 
