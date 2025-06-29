@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: solace-backend
+    env: python
+    buildCommand: "cd backend && pip install -r ../requirements.txt"
+    startCommand: "cd backend && python app.py"
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health
