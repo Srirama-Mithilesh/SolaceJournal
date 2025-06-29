@@ -3,8 +3,7 @@ import { motion } from 'framer-motion';
 import { Save, User, Bell, Moon, Trash, Mail, Calendar, Briefcase, MapPin, Phone, AlertTriangle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import { getUser, saveUser } from '../utils/storage';
-import { updateUserProfile } from '../utils/auth';
+import { databaseService } from '../services/databaseService';
 import { User as UserType } from '../types';
 
 interface SettingsPageProps {
@@ -32,6 +31,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
     }
   });
   
+  const [isLoading, setIsLoading] = useState(false);
+  
   useEffect(() => {
     if (currentUser) {
       setUser(currentUser);
@@ -57,17 +58,59 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
     handlePreferenceChange('aiTone', tone);
   };
   
-  const handleSaveSettings = () => {
-    saveUser(user);
-    updateUserProfile(user);
-    onUserUpdate(user);
-    alert('Settings saved successfully!');
+  const handleSaveSettings = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Update profile in database
+      await databaseService.updateProfile(user.id, {
+        full_name: user.name,
+        email: user.email,
+        occupation: user.occupation,
+        location: user.location,
+        recovery_email: user.recoveryEmail,
+        recovery_phone: user.recoveryPhone
+      });
+
+      // Update preferences in database
+      await databaseService.updateUserPreferences(user.id, {
+        ai_tone: user.preferences.aiTone,
+        notifications_enabled: user.preferences.notifications,
+        dark_mode: user.preferences.darkMode,
+        show_all_entries: user.preferences.showAllEntries
+      });
+
+      onUserUpdate(user);
+      alert('Settings saved successfully!');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      alert('Failed to save settings. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
-  const handleClearData = () => {
-    if (confirm('Are you sure you want to clear all your journal data? This cannot be undone.')) {
-      localStorage.clear();
+  const handleClearData = async () => {
+    if (!confirm('Are you sure you want to clear all your journal data? This cannot be undone.')) {
+      return;
+    }
+
+    if (!user) return;
+
+    try {
+      // Get all entries and delete them
+      const entries = await databaseService.getJournalEntries(user.id);
+      for (const entry of entries) {
+        await databaseService.deleteJournalEntry(entry.id);
+      }
+
+      alert('All journal data has been cleared.');
       window.location.reload();
+    } catch (error) {
+      console.error('Error clearing data:', error);
+      alert('Failed to clear data. Please try again.');
     }
   };
   
@@ -316,8 +359,8 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
         
         <div className="space-y-4">
           <p className="text-gray-700">
-            Your journal entries are stored locally on your device and are not shared with anyone.
-            We take your privacy seriously and do not collect any personal data beyond what you provide.
+            Your journal entries are stored securely in our database with end-to-end encryption.
+            We take your privacy seriously and do not share your personal data with anyone.
           </p>
           
           <div className="p-4 bg-red-50 rounded-lg border border-red-100">
@@ -326,7 +369,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
               Clear All Data
             </h3>
             <p className="text-sm text-red-600 mb-3">
-              This will permanently delete all your journal entries, account information, and settings.
+              This will permanently delete all your journal entries and associated data.
               This action cannot be undone.
             </p>
             <Button 
@@ -343,9 +386,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user: currentUser, onUserUp
       <div className="flex justify-end">
         <Button 
           onClick={handleSaveSettings}
+          disabled={isLoading}
           icon={<Save size={18} />}
         >
-          Save Settings
+          {isLoading ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>
     </div>

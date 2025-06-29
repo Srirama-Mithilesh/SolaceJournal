@@ -1,37 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import JournalEntryCard from '../components/journal/JournalEntryCard';
-import { JournalEntry, Mood } from '../types';
-import { getJournalEntries, getUser } from '../utils/storage';
+import { JournalEntry, Mood, User } from '../types';
+import { databaseService } from '../services/databaseService';
 import MoodIndicator from '../components/ui/MoodIndicator';
 
-const HistoryPage: React.FC = () => {
+interface HistoryPageProps {
+  user: User | null;
+}
+
+const HistoryPage: React.FC<HistoryPageProps> = ({ user }) => {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [filteredEntries, setFilteredEntries] = useState<JournalEntry[]>([]);
   const [selectedMood, setSelectedMood] = useState<Mood | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
-  useEffect(() => {
-    // Get current user
-    const user = getUser();
+  // Function to refresh entries from database
+  const refreshEntries = async () => {
     if (!user) {
       setIsLoading(false);
       return;
     }
 
-    // Load journal entries for current user only
-    const storedEntries = getJournalEntries(user.id);
-    
-    // Sort by date (newest first)
-    const sortedEntries = [...storedEntries].sort((a, b) => {
-      return new Date(b.date).getTime() - new Date(a.date).getTime();
-    });
-    
-    setEntries(sortedEntries);
-    setFilteredEntries(sortedEntries);
-    setIsLoading(false);
-  }, []);
+    try {
+      // Load journal entries from database
+      const dbEntries = await databaseService.getJournalEntries(user.id);
+      
+      // Convert database entries to app format and sort by date (newest first)
+      const formattedEntries: JournalEntry[] = dbEntries
+        .map(entry => ({
+          id: entry.id,
+          userId: entry.user_id,
+          content: entry.content,
+          date: new Date(entry.created_at),
+          mood: entry.mood as 'happy' | 'neutral' | 'sad',
+          aiResponse: entry.ai_response || '',
+          summary: entry.summary || '',
+          highlights: entry.highlights || []
+        }))
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      setEntries(formattedEntries);
+    } catch (error) {
+      console.error('Error loading entries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    refreshEntries();
+  }, [user]);
   
   useEffect(() => {
     // Apply filters
@@ -54,8 +74,16 @@ const HistoryPage: React.FC = () => {
     setFilteredEntries(result);
   }, [entries, selectedMood, searchTerm]);
   
-  const handleDeleteEntry = (id: string) => {
-    setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      await databaseService.deleteJournalEntry(id);
+      // Update local state immediately
+      setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+      // Refresh from database to ensure consistency
+      setTimeout(refreshEntries, 100);
+    } catch (error) {
+      console.error('Error deleting entry:', error);
+    }
   };
   
   // Group entries by month

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, ChevronDown, ChevronUp, Trash } from 'lucide-react';
+import { MessageSquare, ChevronDown, ChevronUp, Trash, Star, StarOff, Clock, Hash } from 'lucide-react';
 import Card from '../ui/Card';
 import MoodIndicator from '../ui/MoodIndicator';
 import Button from '../ui/Button';
 import { JournalEntry } from '../../types';
-import { deleteJournalEntry } from '../../utils/storage';
 
 interface JournalEntryCardProps {
   entry: JournalEntry;
@@ -15,67 +14,104 @@ interface JournalEntryCardProps {
 
 const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
-  const [showDelete, setShowDelete] = useState(false);
+  const [showActions, setShowActions] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const handleDelete = () => {
     if (confirm('Are you sure you want to delete this journal entry?')) {
-      deleteJournalEntry(entry.id);
       onDelete(entry.id);
     }
   };
+
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    // TODO: Update favorite status in database
+  };
   
-  const formattedDate = format(new Date(entry.date), 'MMM d, yyyy - h:mm a');
+  const formattedDate = format(new Date(entry.date), 'MMM d, yyyy');
+  const formattedTime = format(new Date(entry.date), 'h:mm a');
   
   // Create a preview of the content
-  const contentPreview = entry.content.length > 150 
-    ? `${entry.content.substring(0, 150)}...` 
+  const contentPreview = entry.content.length > 200 
+    ? `${entry.content.substring(0, 200)}...` 
     : entry.content;
+
+  // Calculate reading time (average 200 words per minute)
+  const wordCount = entry.content.split(' ').length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
   
   return (
     <Card 
-      className="mb-4" 
+      className="mb-4 transition-all duration-200 hover:shadow-md" 
       hover={false}
-      onMouseEnter={() => setShowDelete(true)}
-      onMouseLeave={() => setShowDelete(false)}
+      onMouseEnter={() => setShowActions(true)}
+      onMouseLeave={() => setShowActions(false)}
     >
       <div className="p-5">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-3">
+          <div className="flex items-center space-x-3">
             <MoodIndicator mood={entry.mood} withLabel />
-            <span className="ml-3 text-sm text-gray-500">{formattedDate}</span>
+            <div className="text-sm text-gray-500">
+              <div className="flex items-center space-x-2">
+                <span>{formattedDate}</span>
+                <span>•</span>
+                <span>{formattedTime}</span>
+                <span>•</span>
+                <div className="flex items-center">
+                  <Clock size={12} className="mr-1" />
+                  <span>{readingTime} min read</span>
+                </div>
+              </div>
+            </div>
           </div>
           
           <AnimatePresence>
-            {showDelete && (
+            {showActions && (
               <motion.div
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
+                className="flex items-center space-x-2"
               >
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={toggleFavorite}
+                  icon={isFavorite ? <Star size={16} className="fill-current" /> : <StarOff size={16} />}
+                  className={`${isFavorite ? 'text-yellow-500 hover:text-yellow-600' : 'text-gray-400 hover:text-yellow-500'}`}
+                  title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                />
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={handleDelete}
                   icon={<Trash size={16} />}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                >
-                  Delete
-                </Button>
+                  title="Delete entry"
+                />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
         
-        <div className="mt-3">
-          <p className="text-gray-800">
-            {expanded ? entry.content : contentPreview}
-          </p>
+        {/* Content */}
+        <div className="mb-4">
+          <motion.div
+            initial={false}
+            animate={{ height: expanded ? 'auto' : 'auto' }}
+            className="overflow-hidden"
+          >
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">
+              {expanded ? entry.content : contentPreview}
+            </p>
+          </motion.div>
           
-          {entry.content.length > 150 && (
+          {entry.content.length > 200 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="text-indigo-600 text-sm mt-2 flex items-center hover:underline"
+              className="text-indigo-600 text-sm mt-2 flex items-center hover:underline transition-colors"
             >
               {expanded ? (
                 <>
@@ -91,24 +127,60 @@ const JournalEntryCard: React.FC<JournalEntryCardProps> = ({ entry, onDelete }) 
         </div>
         
         {/* AI Response Section */}
-        <div className="mt-4 bg-indigo-50 p-4 rounded-lg">
-          <div className="flex items-center mb-2">
-            <MessageSquare size={18} className="text-indigo-500 mr-2" />
-            <h4 className="font-medium text-indigo-700">Solace Response</h4>
-          </div>
-          <p className="text-gray-700">{entry.aiResponse}</p>
-        </div>
+        {entry.aiResponse && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-100"
+          >
+            <div className="flex items-center mb-2">
+              <MessageSquare size={18} className="text-indigo-500 mr-2" />
+              <h4 className="font-medium text-indigo-700">Solace Response</h4>
+            </div>
+            <p className="text-gray-700 leading-relaxed">{entry.aiResponse}</p>
+          </motion.div>
+        )}
         
         {/* Highlights */}
         {entry.highlights && entry.highlights.length > 0 && (
-          <div className="mt-4">
-            <h4 className="font-medium text-gray-700 mb-2">Key moments</h4>
-            <ul className="list-disc pl-5 space-y-1">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mt-4"
+          >
+            <div className="flex items-center mb-2">
+              <Hash size={16} className="text-gray-500 mr-2" />
+              <h4 className="font-medium text-gray-700">Key moments</h4>
+            </div>
+            <div className="space-y-2">
               {entry.highlights.map((highlight, index) => (
-                <li key={index} className="text-gray-600">{highlight}</li>
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  className="flex items-start"
+                >
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <p className="text-gray-600 text-sm leading-relaxed">{highlight}</p>
+                </motion.div>
               ))}
-            </ul>
-          </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Summary */}
+        {entry.summary && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-4 p-3 bg-gray-50 rounded-lg border-l-4 border-gray-300"
+          >
+            <h4 className="font-medium text-gray-700 mb-1 text-sm">Summary</h4>
+            <p className="text-gray-600 text-sm leading-relaxed">{entry.summary}</p>
+          </motion.div>
         )}
       </div>
     </Card>

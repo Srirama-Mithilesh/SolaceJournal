@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Mail, Lock, Calendar, Briefcase, MapPin, Heart, Phone } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { login, signup, LoginCredentials, SignupData } from '../../utils/auth';
+import { loginWithSupabase, signupWithSupabase } from '../../utils/supabaseAuth';
 import { User as UserType } from '../../types';
 
 interface AuthModalProps {
@@ -18,22 +18,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
   const [error, setError] = useState<string | null>(null);
   
   // Login form state
-  const [loginData, setLoginData] = useState<LoginCredentials>({
+  const [loginData, setLoginData] = useState({
     email: '',
     password: ''
   });
   
   // Signup form state
-  const [signupData, setSignupData] = useState<SignupData>({
-    name: '',
+  const [signupData, setSignupData] = useState({
+    full_name: '',
     email: '',
     password: '',
-    dateOfBirth: '',
+    date_of_birth: '',
     occupation: '',
     location: '',
-    interests: [],
-    recoveryEmail: '',
-    recoveryPhone: ''
+    recovery_email: '',
+    recovery_phone: ''
   });
 
   // Calculate max date (13 years ago)
@@ -63,9 +62,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     setError(null);
     
     try {
-      const result = await login(loginData);
+      const result = await loginWithSupabase(loginData.email, loginData.password);
+      
       if (result.success && result.user) {
-        onAuthSuccess(result.user);
+        const user: UserType = {
+          id: result.user.id,
+          name: result.user.profile?.full_name || 'User',
+          email: result.user.email || '',
+          dateOfBirth: result.user.profile?.date_of_birth || '',
+          occupation: result.user.profile?.occupation || '',
+          location: result.user.profile?.location || '',
+          interests: [],
+          recoveryEmail: result.user.profile?.recovery_email || '',
+          recoveryPhone: result.user.profile?.recovery_phone || '',
+          createdAt: new Date(result.user.created_at || Date.now()),
+          preferences: {
+            aiTone: result.user.preferences?.ai_tone || 'calm',
+            notifications: result.user.preferences?.notifications_enabled ?? true,
+            darkMode: result.user.preferences?.dark_mode ?? false,
+            showAllEntries: result.user.preferences?.show_all_entries ?? false
+          }
+        };
+
+        onAuthSuccess(user);
         onClose();
       } else {
         setError(result.error || 'Login failed');
@@ -83,16 +102,36 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
     setError(null);
     
     // Validate age
-    if (!validateAge(signupData.dateOfBirth)) {
+    if (!validateAge(signupData.date_of_birth)) {
       setError('You must be at least 13 years old to create an account');
       setIsLoading(false);
       return;
     }
     
     try {
-      const result = await signup(signupData);
+      const result = await signupWithSupabase(signupData);
+      
       if (result.success && result.user) {
-        onAuthSuccess(result.user);
+        const user: UserType = {
+          id: result.user.id,
+          name: result.user.profile?.full_name || signupData.full_name,
+          email: result.user.email || signupData.email,
+          dateOfBirth: signupData.date_of_birth,
+          occupation: signupData.occupation,
+          location: signupData.location,
+          interests: [],
+          recoveryEmail: signupData.recovery_email,
+          recoveryPhone: signupData.recovery_phone,
+          createdAt: new Date(),
+          preferences: {
+            aiTone: 'calm',
+            notifications: true,
+            darkMode: false,
+            showAllEntries: false
+          }
+        };
+
+        onAuthSuccess(user);
         onClose();
       } else {
         setError(result.error || 'Signup failed');
@@ -107,15 +146,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
   const resetForm = () => {
     setLoginData({ email: '', password: '' });
     setSignupData({
-      name: '',
+      full_name: '',
       email: '',
       password: '',
-      dateOfBirth: '',
+      date_of_birth: '',
       occupation: '',
       location: '',
-      interests: [],
-      recoveryEmail: '',
-      recoveryPhone: ''
+      recovery_email: '',
+      recovery_phone: ''
     });
     setError(null);
   };
@@ -241,8 +279,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="text"
-                      value={signupData.name}
-                      onChange={(e) => setSignupData({ ...signupData, name: e.target.value })}
+                      value={signupData.full_name}
+                      onChange={(e) => setSignupData({ ...signupData, full_name: e.target.value })}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="Your full name"
                       required
@@ -292,8 +330,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                     <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="date"
-                      value={signupData.dateOfBirth}
-                      onChange={(e) => setSignupData({ ...signupData, dateOfBirth: e.target.value })}
+                      value={signupData.date_of_birth}
+                      onChange={(e) => setSignupData({ ...signupData, date_of_birth: e.target.value })}
                       max={getMaxDate()}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       required
@@ -343,8 +381,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="email"
-                      value={signupData.recoveryEmail}
-                      onChange={(e) => setSignupData({ ...signupData, recoveryEmail: e.target.value })}
+                      value={signupData.recovery_email}
+                      onChange={(e) => setSignupData({ ...signupData, recovery_email: e.target.value })}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="recovery@email.com"
                     />
@@ -359,8 +397,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onAuthSuccess })
                     <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="tel"
-                      value={signupData.recoveryPhone}
-                      onChange={(e) => setSignupData({ ...signupData, recoveryPhone: e.target.value })}
+                      value={signupData.recovery_phone}
+                      onChange={(e) => setSignupData({ ...signupData, recovery_phone: e.target.value })}
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                       placeholder="+1 (555) 123-4567"
                     />

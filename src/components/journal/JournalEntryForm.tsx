@@ -4,8 +4,7 @@ import { Pencil, Mic, Image, Loader, BookOpen } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import AudioRecorder from './AudioRecorder';
-import { analyzeMood, analyzeAudio } from '../../utils/moodAnalysis';
-import { saveJournalEntry } from '../../utils/storage';
+import { analyzeAndSaveEntry } from '../../utils/enhancedMoodAnalysis';
 import { JournalEntry, User } from '../../types';
 
 interface JournalEntryFormProps {
@@ -29,23 +28,19 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEnt
     setError(null);
     
     try {
-      // Analyze mood with our real AI function
-      const analysis = await analyzeMood(content);
+      const result = await analyzeAndSaveEntry(content, 'text');
       
-      // Create new journal entry
+      // Convert database entry to app format
       const newEntry: JournalEntry = {
-        id: Date.now().toString(),
-        userId: user.id, // Associate entry with user
-        content,
-        date: new Date(),
-        mood: analysis.mood,
-        aiResponse: analysis.response,
-        summary: analysis.summary,
-        highlights: analysis.highlights
+        id: result.entry.id,
+        userId: result.entry.user_id,
+        content: result.entry.content,
+        date: new Date(result.entry.created_at),
+        mood: result.entry.mood as 'happy' | 'neutral' | 'sad',
+        aiResponse: result.entry.ai_response || '',
+        summary: result.entry.summary || '',
+        highlights: result.entry.highlights || []
       };
-      
-      // Save to local storage
-      saveJournalEntry(newEntry);
       
       // Notify parent component
       onEntrySubmitted(newEntry);
@@ -67,23 +62,19 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEnt
     setError(null);
     
     try {
-      // Analyze audio with our real AI function
-      const analysis = await analyzeAudio(audioBlob);
+      const result = await analyzeAndSaveEntry('', 'audio', audioBlob);
       
-      // Create new journal entry
+      // Convert database entry to app format
       const newEntry: JournalEntry = {
-        id: Date.now().toString(),
-        userId: user.id, // Associate entry with user
-        content: analysis.transcription,
-        date: new Date(),
-        mood: analysis.mood,
-        aiResponse: analysis.response,
-        summary: analysis.summary,
-        highlights: analysis.highlights
+        id: result.entry.id,
+        userId: result.entry.user_id,
+        content: result.entry.content,
+        date: new Date(result.entry.created_at),
+        mood: result.entry.mood as 'happy' | 'neutral' | 'sad',
+        aiResponse: result.entry.ai_response || '',
+        summary: result.entry.summary || '',
+        highlights: result.entry.highlights || []
       };
-      
-      // Save to local storage
-      saveJournalEntry(newEntry);
       
       // Notify parent component
       onEntrySubmitted(newEntry);

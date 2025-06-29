@@ -1,8 +1,7 @@
-
 # Solace Journal  
 **Your Personal AI-Powered Journaling Companion**
 
-Solace Journal is a privacy-first AI journaling application designed to support your emotional wellness journey. It enables users to reflect and express themselves through both text and audio entries, with real-time mood detection, voice-to-text transcription, and intuitive mood analytics. With cross-platform compatibility, a minimalist interface, and complete local data storage, Solace Journal ensures a secure and seamless journaling experience.
+Solace Journal is a privacy-first AI journaling application designed to support your emotional wellness journey. It enables users to reflect and express themselves through both text and audio entries, with real-time mood detection, voice-to-text transcription, and intuitive mood analytics.
 
 ---
 
@@ -20,79 +19,90 @@ Solace Journal is a privacy-first AI journaling application designed to support 
 - **📊 Mood Tracking & Insights**  
   Visual calendar and analytics show emotional trends over time for better self-reflection.
 
-- **🔐 Privacy-First by Design**  
-  All entries and user data are stored locally in your browser with zero server retention.
+- **🎉 Birthday Celebrations**  
+  Special sparkle effects and personalized messages on your birthday.
 
-- **📱 Cross-Platform Compatibility**  
-  Works seamlessly across desktop, tablet, and mobile devices.
+- **📅 Monthly Rewinds**  
+  AI-generated monthly wellness reports with insights and growth tracking.
 
----
-
-## 🧩 Additional Highlights
-
-- **⚡ Seamless Offline Capability**  
-  Core features remain available offline for uninterrupted journaling.
-
-- **🎛️ Customizable AI Tone**  
-  Choose between calm, motivational, or neutral tones to suit your journaling mood.
-
-- **🏷️ Entry Tagging & Smart Search**  
-  Organize and retrieve entries easily using tags and keyword search.
-
-- **🧘 Minimalist, Distraction-Free UI**  
-  Clean design helps you focus on expressing yourself without clutter.
-
-- **🚀 Lightweight & Fast**  
-  Optimized for performance with low memory usage on any device.
-
-- **🧑‍💻 Developer-Friendly**  
-  Modular architecture and fallback support make it ideal for contributors.
-
-- **🛣️ Transparent Roadmap**  
-  Upcoming features include encrypted cloud sync, multi-language support, and advanced mood insights.
+- **🔐 Secure Database Storage**  
+  All data stored securely in Supabase with row-level security.
 
 ---
 
 ## 🛠️ Installation and Setup
 
-### 🖥️ Requirements
+### 📋 Prerequisites
 
-- Python 3.8+
 - Node.js 16+
+- Python 3.8+ (for AI backend)
+- Supabase account
 - Google Gemini AI API key
 
-### ⚙️ Configuration
+### ⚙️ Database Setup (Supabase)
 
-1. **Get API Key**  
+1. **Create a Supabase Project**
+   - Go to [supabase.com](https://supabase.com)
+   - Create a new project
+   - Wait for the project to be ready
+
+2. **Get Your Supabase Credentials**
+   - Go to Project Settings → API
+   - Copy your Project URL and anon/public key
+
+3. **Run Database Migration**
+   - Go to SQL Editor in your Supabase dashboard
+   - Copy and paste the contents of `supabase/migrations/20250628180517_black_rain.sql`
+   - Run the migration to create all tables and security policies
+
+### 🔑 Environment Setup
+
+1. **Copy Environment File**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Add Your Credentials**
+   ```env
+   # Supabase Configuration
+   VITE_SUPABASE_URL=your_supabase_project_url_here
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+   # Gemini AI Configuration
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+
+3. **Get Gemini AI API Key**
    - Visit: [Google AI Studio](https://aistudio.google.com/)
    - Log in and generate your API key
+   - Add it to your `.env` file
 
-2. **Set Up Environment**  
-   ```bash
-   git clone <repository-url>
-   cd solace-journal
-   cp .env.example .env
-   # Add your API key
-   GEMINI_API_KEY=your_actual_api_key_here
-   ```
+### 🚀 Installation
 
-3. **Install Dependencies**  
+1. **Install Dependencies**
    ```bash
-   pip install -r requirements.txt
    npm install
+   pip install -r requirements.txt
    ```
 
-4. **Run Application**  
+2. **Start the Application**
    ```bash
    npm run dev:full
    ```
-   Access at:<br>
-     - Frontend: `http://localhost:5173`
-     - Backend: `http://localhost:5000`
+
+   This starts both:
+   - Frontend: `http://localhost:5173`
+   - Backend: `http://localhost:5000`
 
 ---
 
 ## 🧭 User Guide
+
+### Getting Started
+1. **Create Account** - Sign up with your email and personal details
+2. **Start Journaling** - Write or record your thoughts and feelings
+3. **View Analytics** - Check your mood dashboard and calendar
+4. **Explore Features** - Birthday celebrations and monthly rewinds
 
 ### Text Journaling  
 Use the text editor to write your thoughts. The AI provides empathetic responses and mood feedback in real time.
@@ -100,107 +110,75 @@ Use the text editor to write your thoughts. The AI provides empathetic responses
 ### Audio Journaling  
 Record your voice. The app transcribes it and analyzes the emotion behind your words.
 
-### Reviewing & Insights  
-- Browse previous entries by date, mood, or keywords.  
-- View dashboards with emotion charts and analytics.
+### Dashboard & Analytics
+- Browse previous entries by date, mood, or keywords
+- View mood distribution charts and happiness index
+- See your emotional journey on the calendar heatmap
 
-### Personalization  
-Adjust tone, interface layout, and AI sensitivity to fit your preferences.
-
----
-
-## 🔌 Developer & API Reference
-
-### Commands
-```bash
-# Start backend only
-npm run backend
-
-# Start frontend only
-npm run dev
-```
-
-### API Endpoints
-
-| Endpoint           | Method | Purpose                              |
-|--------------------|--------|--------------------------------------|
-| `/health`          | GET    | Check service status                 |
-| `/analyze-text`    | POST   | Analyze mood and generate responses |
-| `/transcribe-audio`| POST   | Convert voice to text                |
-| `/analyze-audio`   | POST   | Full audio analysis pipeline         |
-
----
-
-## 🧪 Testing & Troubleshooting
-
-- **AI Unavailable?**  
-  - Check internet and API key  
-  - App uses mock responses when offline
-
-- **Audio Not Working?**  
-  - Check mic permissions  
-  - Close other apps using mic  
-  - Refresh if newly granted
-
-- **Startup Issues?**  
-  - Ensure correct Python/Node.js versions  
-  - Reinstall with `pip install -r requirements.txt`  
-  - Ensure ports 5000 and 5173 are free
+### Special Features
+- **Birthday Sparkles** - Automatic celebration on your birthday
+- **Monthly Rewinds** - Comprehensive monthly wellness reports
+- **Mood Calendar** - Visual representation of your emotional journey
 
 ---
 
 ## 🔐 Privacy and Security
 
-- **Local-Only Storage**  
-  No data is sent to external servers.
-
-- **Zero Retention AI**  
-  Analysis is done in real-time with no logs.
-
-- **Minimal External Dependencies**  
-  App works offline except for API calls.
-
-- **Future Enhancements**  
-  Optional encrypted cloud sync with user-owned keys.
+- **Row-Level Security** - Users can only access their own data
+- **Encrypted Storage** - All data encrypted at rest and in transit
+- **No Data Sharing** - Your personal information is never shared
+- **Secure Authentication** - Powered by Supabase Auth
 
 ---
 
-## 🧱 Technical Stack
+## 🧱 Technical Architecture
 
 ### Frontend
-
-- React + TypeScript  
-- Tailwind CSS  
-- Framer Motion
+- React + TypeScript
+- Tailwind CSS for styling
+- Framer Motion for animations
+- Supabase client for database operations
 
 ### Backend
+- Python Flask for AI processing
+- Google Gemini AI for mood analysis
+- Supabase for database and authentication
 
-- Python Flask  
-- Google Gemini AI  
-- Web Audio API
+### Database
+- PostgreSQL (via Supabase)
+- Comprehensive schema with 12+ tables
+- Automatic triggers for mood analytics
+- Row-level security policies
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork and create a feature branch  
-2. Follow code conventions and ensure responsiveness  
-3. Test on multiple devices  
-4. Submit a clear pull request
-
-### Guidelines
-
-- Follow TypeScript best practices  
-- Ensure accessibility and responsiveness  
-- Prioritize user privacy
+1. Fork the repository
+2. Create a feature branch
+3. Follow TypeScript and React best practices
+4. Ensure responsive design
+5. Test on multiple devices
+6. Submit a pull request
 
 ---
 
-## 🙋 Support & Community
+## 🆘 Troubleshooting
 
-- **Report Bugs**: GitHub issues  
-- **Request Features**: GitHub discussions  
-- **Enterprise Support**: Contact core devs
+### Database Connection Issues
+- Verify your Supabase URL and API key in `.env`
+- Check that the migration has been run in Supabase SQL Editor
+- Ensure your Supabase project is active
+
+### AI Not Working
+- Check your Gemini API key in `.env`
+- Verify internet connection
+- App will use fallback responses if AI is unavailable
+
+### Audio Recording Issues
+- Check microphone permissions in browser
+- Ensure no other apps are using the microphone
+- Refresh the page if permissions were recently granted
 
 ---
 
@@ -210,4 +188,4 @@ MIT License. See `LICENSE` for full terms.
 
 ---
 
-Solace Journal stands as a commitment to accessible mental health support and strong data privacy. It is a companion in your emotional journey—not a replacement for professional help.
+**Solace Journal** - Your companion in emotional wellness and self-discovery. 💜

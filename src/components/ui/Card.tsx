@@ -5,14 +5,24 @@ interface CardProps {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-const Card: React.FC<CardProps> = ({ children, className = '', hover = true }) => {
+const Card: React.FC<CardProps> = ({ 
+  children, 
+  className = '', 
+  hover = true,
+  onMouseEnter,
+  onMouseLeave
+}) => {
   return (
     <motion.div
       className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden ${className}`}
-      whileHover={hover ? { y: -4, boxShadow: '0 12px 24px -8px rgba(0, 0, 0, 0.08)' } : {}}
-      transition={{ duration: 0.2 }}
+      whileHover={hover ? { y: -2, boxShadow: '0 8px 25px -8px rgba(0, 0, 0, 0.1)' } : {}}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       {children}
     </motion.div>
