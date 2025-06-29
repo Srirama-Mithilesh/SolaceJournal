@@ -29,12 +29,78 @@ try {
   throw new Error(`Invalid Supabase URL format: ${supabaseUrl}`);
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+// Create Supabase client with enhanced configuration for better connectivity
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'solace-journal@1.0.0',
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 2,
+    },
+  },
+});
+
+// Test connection function
+export const testSupabaseConnection = async (): Promise<{ success: boolean; error?: string }> => {
+  try {
+    console.log('Testing Supabase connection...');
+    console.log('Supabase URL:', supabaseUrl);
+    console.log('Anon Key (first 20 chars):', supabaseAnonKey.substring(0, 20) + '...');
+    
+    // Simple test query to check connectivity
+    const { data, error } = await supabase
+      .from('daily_prompts')
+      .select('id')
+      .limit(1);
+    
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return { 
+        success: false, 
+        error: `Database query failed: ${error.message}` 
+      };
+    }
+    
+    console.log('Supabase connection test successful');
+    return { success: true };
+  } catch (error) {
+    console.error('Supabase connection test error:', error);
+    
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      return { 
+        success: false, 
+        error: 'Network error: Unable to reach Supabase servers. Check your internet connection and firewall settings.' 
+      };
+    }
+    
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown connection error' 
+    };
+  }
+};
 
 // Helper functions for common operations
 export const getCurrentUser = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  return user;
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error('Error getting current user:', error);
+      throw error;
+    }
+    return user;
+  } catch (error) {
+    console.error('Failed to get current user:', error);
+    throw error;
+  }
 };
 
 export const signOut = async () => {

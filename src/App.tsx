@@ -10,6 +10,7 @@ import SettingsPage from './pages/SettingsPage';
 import BirthdaySparkles from './components/birthday/BirthdaySparkles';
 import MonthlyRewindModal from './components/rewind/MonthlyRewindModal';
 import { getCurrentUserProfile } from './utils/supabaseAuth';
+import { testSupabaseConnection } from './lib/supabase';
 import { useBirthday } from './hooks/useBirthday';
 import { useMonthlyRewind } from './hooks/useMonthlyRewind';
 import { User, AuthState } from './types';
@@ -52,6 +53,21 @@ function App() {
         return;
       }
 
+      // Test Supabase connection first
+      console.log('Testing Supabase connection...');
+      const connectionTest = await testSupabaseConnection();
+      
+      if (!connectionTest.success) {
+        setConnectionError(connectionTest.error || 'Failed to connect to database');
+        setAuthState({
+          isAuthenticated: false,
+          user: null,
+          isLoading: false
+        });
+        return;
+      }
+
+      console.log('Supabase connection successful, checking user profile...');
       const userProfile = await getCurrentUserProfile();
       
       if (userProfile) {
@@ -90,7 +106,20 @@ function App() {
       }
     } catch (error) {
       console.error('Error checking auth state:', error);
-      setConnectionError('Failed to connect to database. Please check your internet connection.');
+      
+      let errorMessage = 'Failed to connect to database. Please check your internet connection.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          errorMessage = 'Network error: Unable to reach Supabase servers. Please check your internet connection and try again.';
+        } else if (error.message.includes('Invalid Supabase URL')) {
+          errorMessage = 'Invalid Supabase configuration. Please check your environment variables.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setConnectionError(errorMessage);
       setAuthState({
         isAuthenticated: false,
         user: null,
@@ -147,6 +176,7 @@ function App() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Connecting to Solace Journal...</p>
+          <p className="text-gray-500 text-sm mt-2">Testing database connection...</p>
         </div>
       </div>
     );
@@ -162,8 +192,8 @@ function App() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Database Connection Required</h2>
-          <p className="text-gray-600 mb-4">{connectionError}</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Connection Error</h2>
+          <p className="text-gray-600 mb-4 text-sm leading-relaxed">{connectionError}</p>
           <div className="space-y-3">
             <button
               onClick={handleRetryConnection}
@@ -171,9 +201,15 @@ function App() {
             >
               Retry Connection
             </button>
-            <p className="text-sm text-gray-500">
-              Need help? Check the README for Supabase setup instructions.
-            </p>
+            <div className="text-xs text-gray-500 space-y-1">
+              <p>Troubleshooting tips:</p>
+              <ul className="text-left list-disc list-inside space-y-1">
+                <li>Check your internet connection</li>
+                <li>Verify Supabase project is active</li>
+                <li>Disable VPN/proxy if using one</li>
+                <li>Check firewall settings</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
