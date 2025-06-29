@@ -1,5 +1,5 @@
 // API service for communicating with the Python backend
-const API_BASE_URL = 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
 export interface AIAnalysisResult {
   summary: string;
@@ -16,7 +16,7 @@ export interface AudioTranscriptionResult {
 }
 
 class AIService {
-  private async makeRequest(endpoint: string, data: any): Promise<any> {
+  private async makeRequest(endpoint: string, data: any): Promise<any> => {
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
