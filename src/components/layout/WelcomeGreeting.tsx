@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Sparkles } from 'lucide-react';
+import { Heart, Sparkles, BookOpen, Feather } from 'lucide-react';
 import { User } from '../../types';
 
 interface WelcomeGreetingProps {
@@ -15,32 +15,32 @@ const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ user }) => {
     return 'Good evening';
   };
 
-  const getMottoOfTheDay = (): string => {
-    const mottos = [
-      "Every thought matters, every feeling is valid.",
-      "Your journey of self-discovery starts with a single word.",
-      "In the quiet moments, we find our truest selves.",
-      "Today's reflections become tomorrow's wisdom.",
-      "Your story is worth telling, your voice worth hearing.",
-      "Small moments of mindfulness create lasting change.",
-      "Every entry is a step toward understanding yourself better.",
-      "Your thoughts are the seeds of your personal growth.",
-      "In writing, we find clarity; in reflection, we find peace.",
-      "Today is a new page in your story of self-discovery."
+  const getPersonalMessage = (): string => {
+    const messages = [
+      "Your thoughts are precious gems waiting to be discovered.",
+      "Every word you write is a step toward understanding yourself better.",
+      "In the quiet moments of reflection, wisdom blooms.",
+      "Your diary is a safe haven for your heart's deepest truths.",
+      "Today's feelings are tomorrow's insights - let them flow freely.",
+      "Your emotional journey deserves to be honored and remembered.",
+      "In writing, we find clarity; in sharing, we find healing.",
+      "Your story matters, and every chapter begins with a single word.",
+      "Let your heart speak through your pen - I'm here to listen.",
+      "Your vulnerability is your strength, your words are your power."
     ];
     
-    // Use date to ensure same motto for the day
+    // Use date to ensure same message for the day
     const today = new Date().toDateString();
-    const index = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % mottos.length;
-    return mottos[index];
+    const index = today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % messages.length;
+    return messages[index];
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-6 mb-8"
+      transition={{ duration: 0.8 }}
+      className="bg-gradient-to-r from-white/80 to-amber-50/80 backdrop-blur-sm border-2 border-amber-200 rounded-2xl p-6 mb-8 shadow-lg"
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
@@ -48,11 +48,13 @@ const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ user }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex items-center mb-2"
+            className="flex items-center mb-3"
           >
-            <Heart className="h-5 w-5 text-indigo-500 mr-2" />
-            <h2 className="text-lg font-semibold text-gray-800">
-              {user ? `${getTimeBasedGreeting()}, ${user.name.split(' ')[0]}` : 'Welcome to Solace'}
+            <div className="w-10 h-10 bg-amber-200 rounded-full flex items-center justify-center mr-3">
+              <Heart className="h-5 w-5 text-amber-700" />
+            </div>
+            <h2 className="text-xl font-semibold text-amber-800">
+              {user ? `${getTimeBasedGreeting()}, ${user.name.split(' ')[0]}` : 'Welcome to your sanctuary'}
             </h2>
           </motion.div>
           
@@ -60,18 +62,27 @@ const WelcomeGreeting: React.FC<WelcomeGreetingProps> = ({ user }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="text-gray-600 italic"
+            className="text-amber-700 leading-relaxed"
           >
-            {getMottoOfTheDay()}
+            {getPersonalMessage()}
           </motion.p>
         </div>
         
         <motion.div
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.6, type: "spring" }}
+          initial={{ opacity: 0, scale: 0, rotate: -180 }}
+          animate={{ opacity: 1, scale: 1, rotate: 0 }}
+          transition={{ delay: 0.6, type: "spring", damping: 15 }}
+          className="flex space-x-2"
         >
-          <Sparkles className="h-8 w-8 text-indigo-400" />
+          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-amber-600" />
+          </div>
+          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+            <BookOpen className="h-4 w-4 text-orange-600" />
+          </div>
+          <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+            <Feather className="h-4 w-4 text-yellow-600" />
+          </div>
         </motion.div>
       </div>
     </motion.div>
