@@ -313,27 +313,32 @@ export class DatabaseService {
 
     if (!isBirthdayToday) return null;
 
-    // Check if celebration already exists for this year
+    // Check if celebration already exists for this year using limit(1) instead of single()
     const { data, error } = await supabase
       .from('birthday_celebrations')
       .select('*')
       .eq('user_id', userId)
       .eq('celebration_year', currentYear)
-      .single();
+      .limit(1);
 
-    if (error && error.code !== 'PGRST116') throw error;
+    if (error) throw error;
 
-    // If no celebration exists, create one
-    if (!data) {
-      const celebrationData = {
-        user_id: userId,
-        celebration_year: currentYear,
-        special_message: `Happy Birthday, ${profile.full_name}! 🎉 Another year of growth, reflection, and beautiful moments captured in your journal.`,
-        achievements_summary: await this.generateAchievementsSummary(userId),
-        year_in_review: await this.generateYearInReview(userId),
-        mood_journey_summary: await this.generateMoodJourneySummary(userId)
-      };
+    // If celebration exists, return it
+    if (data && data.length > 0) {
+      return data[0];
+    }
 
+    // If no celebration exists, create one with proper error handling
+    const celebrationData = {
+      user_id: userId,
+      celebration_year: currentYear,
+      special_message: `Happy Birthday, ${profile.full_name}! 🎉 Another year of growth, reflection, and beautiful moments captured in your journal.`,
+      achievements_summary: await this.generateAchievementsSummary(userId),
+      year_in_review: await this.generateYearInReview(userId),
+      mood_journey_summary: await this.generateMoodJourneySummary(userId)
+    };
+
+    try {
       const { data: newCelebration, error: createError } = await supabase
         .from('birthday_celebrations')
         .insert(celebrationData)
@@ -342,9 +347,23 @@ export class DatabaseService {
 
       if (createError) throw createError;
       return newCelebration;
-    }
+    } catch (insertError: any) {
+      // Handle race condition - if duplicate key error occurs, fetch the existing record
+      if (insertError.code === '23505') {
+        const { data: existingData, error: fetchError } = await supabase
+          .from('birthday_celebrations')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('celebration_year', currentYear)
+          .limit(1);
 
-    return data;
+        if (fetchError) throw fetchError;
+        return existingData && existingData.length > 0 ? existingData[0] : null;
+      }
+      
+      // Re-throw other errors
+      throw insertError;
+    }
   }
 
   private async generateAchievementsSummary(userId: string): Promise<string> {
