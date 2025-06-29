@@ -11,7 +11,7 @@ interface MoodCalendarProps {
 }
 
 interface CalendarData {
-  date: Date;
+  date: string;
   mood: Mood;
   count: number;
 }
@@ -28,7 +28,7 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
   const entriesByDate = new Map<string, JournalEntry[]>();
   
   entries.forEach(entry => {
-    const dateKey = new Date(entry.date).toDateString();
+    const dateKey = new Date(entry.date).toISOString().split('T')[0];
     if (!entriesByDate.has(dateKey)) {
       entriesByDate.set(dateKey, []);
     }
@@ -55,65 +55,26 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
     });
     
     calendarData.push({
-      date: new Date(dateKey),
+      date: dateKey,
       mood: dominantMood,
       count: dayEntries.length
     });
   });
   
-  // Get mood emoji based on mood
-  const getMoodEmoji = (mood: Mood): string => {
-    switch (mood) {
+  // Get class name based on mood
+  const getClassForValue = (value: CalendarData | null) => {
+    if (!value) return 'color-empty';
+    
+    switch (value.mood) {
       case 'happy':
-        return '😊';
+        return 'color-scale-4';
       case 'neutral':
-        return '😐';
+        return 'color-scale-2';
       case 'sad':
-        return '😢';
+        return 'color-scale-1';
       default:
-        return '😐';
+        return 'color-empty';
     }
-  };
-  
-  // Custom cell renderer with emojis
-  const renderCell = (value: CalendarData | null, index: number) => {
-    if (!value) {
-      return (
-        <rect
-          key={index}
-          width="11"
-          height="11"
-          fill="#ebedf0"
-          rx="2"
-          ry="2"
-        />
-      );
-    }
-    
-    const emoji = getMoodEmoji(value.mood);
-    
-    return (
-      <g key={index}>
-        <rect
-          width="11"
-          height="11"
-          fill="transparent"
-          stroke="#d1d5db"
-          strokeWidth="0.5"
-          rx="2"
-          ry="2"
-        />
-        <text
-          x="5.5"
-          y="8"
-          textAnchor="middle"
-          fontSize="8"
-          fill="black"
-        >
-          {emoji}
-        </text>
-      </g>
-    );
   };
   
   return (
@@ -122,16 +83,16 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
       
       <div className="mb-4 flex items-center space-x-6">
         <div className="flex items-center">
-          <span className="mr-2 text-lg">😊</span>
-          <span className="text-sm text-gray-600">Happy</span>
+          <MoodIndicator mood="happy" size={16} />
+          <span className="ml-2 text-sm text-gray-600">Happy</span>
         </div>
         <div className="flex items-center">
-          <span className="mr-2 text-lg">😐</span>
-          <span className="text-sm text-gray-600">Neutral</span>
+          <MoodIndicator mood="neutral" size={16} />
+          <span className="ml-2 text-sm text-gray-600">Neutral</span>
         </div>
         <div className="flex items-center">
-          <span className="mr-2 text-lg">😢</span>
-          <span className="text-sm text-gray-600">Sad</span>
+          <MoodIndicator mood="sad" size={16} />
+          <span className="ml-2 text-sm text-gray-600">Sad</span>
         </div>
       </div>
       
@@ -143,17 +104,25 @@ const MoodCalendar: React.FC<MoodCalendarProps> = ({ entries }) => {
           titleForValue={(value) => {
             if (!value) return 'No entries';
             const { date, mood, count } = value;
-            return `${date.toDateString()}: ${mood} (${count} ${count === 1 ? 'entry' : 'entries'})`;
+            const formattedDate = new Date(date).toDateString();
+            return `${formattedDate}: ${mood} (${count} ${count === 1 ? 'entry' : 'entries'})`;
           }}
-          transformDayElement={(element, value, index) => {
-            return renderCell(value, index);
-          }}
+          classForValue={getClassForValue}
         />
       </div>
       
       <style jsx>{`
-        .mood-calendar {
-          width: 100%;
+        .mood-calendar .react-calendar-heatmap .color-empty {
+          fill: #ebedf0;
+        }
+        .mood-calendar .react-calendar-heatmap .color-scale-1 {
+          fill: #c084fc;
+        }
+        .mood-calendar .react-calendar-heatmap .color-scale-2 {
+          fill: #60a5fa;
+        }
+        .mood-calendar .react-calendar-heatmap .color-scale-4 {
+          fill: #4ade80;
         }
         .mood-calendar .react-calendar-heatmap text {
           font-size: 10px;

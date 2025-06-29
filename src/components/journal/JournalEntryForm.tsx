@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pencil, Mic, Image, Loader, BookOpen, Feather, Heart } from 'lucide-react';
+import { Pencil, Mic, Image, Loader, BookOpen } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import AudioRecorder from './AudioRecorder';
@@ -97,157 +97,98 @@ const JournalEntryForm: React.FC<JournalEntryFormProps> = ({ prompt, user, onEnt
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-amber-200 overflow-hidden">
-      {/* Diary Header */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-100 p-6 border-b border-amber-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-amber-200 rounded-full flex items-center justify-center mr-3">
-              <Feather className="text-amber-700" size={20} />
-            </div>
-            <div>
-              <h2 className="text-xl font-semibold text-amber-800">Dear Diary...</h2>
-              <p className="text-amber-600 text-sm">
-                {new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </p>
-            </div>
-          </div>
-          <Heart className="text-amber-500" size={24} />
-        </div>
-        
-        <div className="mt-4 p-3 bg-white/60 rounded-lg border border-amber-200">
-          <p className="text-amber-700 italic text-sm">
-            💭 Today's reflection: "{prompt}"
-          </p>
-        </div>
+    <Card className="p-6">
+      <h2 className="text-xl font-semibold text-gray-800 mb-2">Your Personal Diary</h2>
+      <p className="text-gray-500 mb-6 italic">{prompt}</p>
+      
+      {/* Error Message */}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4"
+        >
+          {error}
+        </motion.div>
+      )}
+      
+      {/* Input Type Tabs */}
+      <div className="flex mb-4 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('text')}
+          className={`flex items-center pb-2 px-4 ${
+            activeTab === 'text' 
+              ? 'border-b-2 border-indigo-500 text-indigo-600' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Pencil size={18} className="mr-2" />
+          <span>Write</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('audio')}
+          className={`flex items-center pb-2 px-4 ${
+            activeTab === 'audio' 
+              ? 'border-b-2 border-indigo-500 text-indigo-600' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Mic size={18} className="mr-2" />
+          <span>Speak</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('photo')}
+          className={`flex items-center pb-2 px-4 ${
+            activeTab === 'photo' 
+              ? 'border-b-2 border-indigo-500 text-indigo-600' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+          disabled
+          title="Coming soon"
+        >
+          <Image size={18} className="mr-2" />
+          <span>Capture</span>
+        </button>
       </div>
-
-      <div className="p-6">
-        {/* Error Message */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg mb-4"
-          >
-            {error}
-          </motion.div>
-        )}
-        
-        {/* Input Type Tabs */}
-        <div className="flex mb-6 bg-amber-50 rounded-xl p-1 border border-amber-200">
-          <button
-            onClick={() => setActiveTab('text')}
-            className={`flex items-center flex-1 py-2 px-4 rounded-lg transition-all duration-200 ${
-              activeTab === 'text' 
-                ? 'bg-white text-amber-700 shadow-sm border border-amber-200' 
-                : 'text-amber-600 hover:text-amber-700'
-            }`}
-          >
-            <Pencil size={18} className="mr-2" />
-            <span className="font-medium">Write</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('audio')}
-            className={`flex items-center flex-1 py-2 px-4 rounded-lg transition-all duration-200 ${
-              activeTab === 'audio' 
-                ? 'bg-white text-amber-700 shadow-sm border border-amber-200' 
-                : 'text-amber-600 hover:text-amber-700'
-            }`}
-          >
-            <Mic size={18} className="mr-2" />
-            <span className="font-medium">Speak</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('photo')}
-            className={`flex items-center flex-1 py-2 px-4 rounded-lg transition-all duration-200 ${
-              activeTab === 'photo' 
-                ? 'bg-white text-amber-700 shadow-sm border border-amber-200' 
-                : 'text-amber-600 hover:text-amber-700 opacity-50'
-            }`}
-            disabled
-            title="Coming soon"
-          >
-            <Image size={18} className="mr-2" />
-            <span className="font-medium">Capture</span>
-          </button>
+      
+      {/* Input Form */}
+      {activeTab === 'text' && (
+        <form onSubmit={handleSubmitText}>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Dear diary, today I feel... Share whatever's on your mind, I'm here to listen."
+            className="w-full p-4 border border-gray-300 rounded-lg min-h-[150px] focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+            disabled={isAnalyzing}
+          />
+          
+          <div className="flex justify-end mt-4">
+            <Button 
+              type="submit" 
+              disabled={!content.trim() || isAnalyzing}
+              icon={isAnalyzing ? <Loader className="animate-spin" /> : <BookOpen />}
+            >
+              {isAnalyzing ? 'Understanding your thoughts...' : 'Add to my diary'}
+            </Button>
+          </div>
+        </form>
+      )}
+      
+      {activeTab === 'audio' && (
+        <AudioRecorder 
+          onAudioRecorded={handleSubmitAudio}
+          isAnalyzing={isAnalyzing}
+        />
+      )}
+      
+      {activeTab === 'photo' && (
+        <div className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+          <Image size={48} className="text-gray-400 mb-4" />
+          <p className="text-gray-500 text-center">Photo journaling coming soon</p>
+          <p className="text-gray-400 text-sm mt-2">Capture moments and let AI understand your visual stories</p>
         </div>
-        
-        {/* Input Form */}
-        {activeTab === 'text' && (
-          <form onSubmit={handleSubmitText}>
-            <div className="relative">
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Dear diary, today I feel... Pour your heart out, I'm here to listen and understand. ✨"
-                className="w-full p-6 border-2 border-amber-200 rounded-xl min-h-[200px] focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-all duration-200 bg-gradient-to-br from-white to-amber-50 placeholder-amber-400 text-amber-900 resize-none"
-                disabled={isAnalyzing}
-                style={{
-                  fontFamily: "'Dancing Script', cursive, sans-serif",
-                  fontSize: '16px',
-                  lineHeight: '1.6'
-                }}
-              />
-              
-              {/* Decorative elements */}
-              <div className="absolute top-4 right-4 text-amber-300">
-                <Heart size={20} />
-              </div>
-              <div className="absolute bottom-4 left-4 text-amber-300">
-                <Feather size={16} />
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-center mt-6">
-              <div className="text-sm text-amber-600">
-                {content.length > 0 && (
-                  <span>{content.split(' ').length} words written</span>
-                )}
-              </div>
-              
-              <Button 
-                type="submit" 
-                disabled={!content.trim() || isAnalyzing}
-                icon={isAnalyzing ? <Loader className="animate-spin" /> : <BookOpen />}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-6 py-3 rounded-xl shadow-lg"
-              >
-                {isAnalyzing ? 'Understanding your heart...' : 'Share with my diary'}
-              </Button>
-            </div>
-          </form>
-        )}
-        
-        {activeTab === 'audio' && (
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-6 border-2 border-amber-200">
-            <AudioRecorder 
-              onAudioRecorded={handleSubmitAudio}
-              isAnalyzing={isAnalyzing}
-            />
-          </div>
-        )}
-        
-        {activeTab === 'photo' && (
-          <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-amber-300 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50">
-            <Image size={48} className="text-amber-400 mb-4" />
-            <p className="text-amber-600 text-center font-medium">Photo journaling coming soon</p>
-            <p className="text-amber-500 text-sm mt-2 text-center">
-              Capture moments and let AI understand your visual stories
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* Add Google Fonts for handwriting effect */}
-      <style jsx>{`
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600&display=swap');
-      `}</style>
-    </div>
+      )}
+    </Card>
   );
 };
 

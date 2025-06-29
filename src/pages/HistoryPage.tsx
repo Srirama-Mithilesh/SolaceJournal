@@ -12,8 +12,8 @@ const HistoryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   
-  useEffect(() => {
-    // Get current user
+  // Function to refresh entries from storage
+  const refreshEntries = () => {
     const user = getUser();
     if (!user) {
       setIsLoading(false);
@@ -29,8 +29,11 @@ const HistoryPage: React.FC = () => {
     });
     
     setEntries(sortedEntries);
-    setFilteredEntries(sortedEntries);
     setIsLoading(false);
+  };
+  
+  useEffect(() => {
+    refreshEntries();
   }, []);
   
   useEffect(() => {
@@ -55,7 +58,10 @@ const HistoryPage: React.FC = () => {
   }, [entries, selectedMood, searchTerm]);
   
   const handleDeleteEntry = (id: string) => {
+    // Update local state immediately
     setEntries(prevEntries => prevEntries.filter(entry => entry.id !== id));
+    // Refresh from storage to ensure consistency
+    setTimeout(refreshEntries, 100);
   };
   
   // Group entries by month
