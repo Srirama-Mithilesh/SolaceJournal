@@ -1,0 +1,16 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  VITE_SUPABASE_URL = "https://aqozrueiovjhbzwbyaqw.supabase.co"
+  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxb3pydWVpb3ZqaGJ6d2J5YXF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyMTMwNzMsImV4cCI6MjA2Njc4OTA3M30.eQGzS4889BgHgLTTKKP_3Fwxnvq3CD0WqHcfIcg3P-g"
+  VITE_BACKEND_URL = "https://your-backend-app-name.onrender.com"
